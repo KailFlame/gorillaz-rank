@@ -11,18 +11,83 @@
             box-sizing: border-box;
         }
 
+        /* Анимация пульсации для фона */
+        @keyframes pulse {
+            0% { opacity: 0.4; text-shadow: 0 0 5px #667eea; }
+            50% { opacity: 0.7; text-shadow: 0 0 20px #667eea, 0 0 30px #764ba2; }
+            100% { opacity: 0.4; text-shadow: 0 0 5px #667eea; }
+        }
+
+        /* Анимация свечения для карточек */
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px rgba(102, 126, 234, 0.3); border-color: rgba(102, 126, 234, 0.3); }
+            100% { box-shadow: 0 0 25px rgba(102, 126, 234, 0.6); border-color: rgba(102, 126, 234, 0.8); }
+        }
+
+        /* Анимация появления строк таблицы */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Анимация движения фона */
+        @keyframes gradientBG {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 0%; }
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             min-height: 100vh;
             padding: 20px;
+            position: relative;
+            background: linear-gradient(135deg, #0a0a2a, #1a1a3a, #0f0f2f, #1a1a4a);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            overflow-x: hidden;
+        }
+
+        /* Анимированные частицы фона */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            background: radial-gradient(circle, rgba(102,126,234,0.4), transparent);
+            border-radius: 50%;
+            animation: float linear infinite;
+        }
+
+        @keyframes float {
+            from { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            to { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
 
+        /* Заголовок с неоновым эффектом */
         .header {
             text-align: center;
             margin-bottom: 40px;
@@ -30,38 +95,58 @@
         }
 
         .header h1 {
-            font-size: 3rem;
+            font-size: 3.5rem;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 0 0 10px #667eea, 0 0 20px #667eea, 0 0 30px #667eea, 0 0 40px #764ba2;
+            animation: pulse 3s infinite;
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, #fff, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
         }
 
         .header p {
-            font-size: 1.1rem;
-            opacity: 0.85;
+            font-size: 1.2rem;
+            opacity: 0.9;
+            color: #ccc;
+            text-shadow: 0 0 5px rgba(102,126,234,0.5);
         }
 
+        /* Поиск с неоновой рамкой */
         .controls {
-            background: rgba(255,255,255,0.95);
-            border-radius: 20px;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(12px);
+            border-radius: 30px;
             padding: 20px;
             margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(102, 126, 234, 0.4);
+            transition: all 0.3s;
+        }
+
+        .controls:hover {
+            border-color: #667eea;
+            animation: glow 0.5s ease-in-out;
         }
 
         .search-box input {
             width: 100%;
-            padding: 14px 20px;
+            padding: 14px 24px;
             font-size: 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 30px;
+            border: none;
+            border-radius: 40px;
             transition: all 0.3s;
+            background: rgba(255,255,255,0.9);
         }
 
         .search-box input:focus {
             outline: none;
-            border-color: #667eea;
+            box-shadow: 0 0 20px #667eea;
+            transform: scale(1.01);
         }
 
+        /* Статистика — карточки с эффектом стекла */
         .stats {
             display: flex;
             gap: 20px;
@@ -70,33 +155,53 @@
         }
 
         .stat-card {
-            background: rgba(255,255,255,0.95);
-            border-radius: 20px;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(12px);
+            border-radius: 25px;
             padding: 20px;
             flex: 1;
             min-width: 140px;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px);
+            border-color: #667eea;
+            animation: glow 0.5s ease-in-out;
         }
 
         .stat-card h3 {
-            font-size: 2.2rem;
+            font-size: 2.5rem;
             background: linear-gradient(135deg, #667eea, #764ba2);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
+            text-shadow: 0 0 10px rgba(102,126,234,0.3);
         }
 
         .stat-card p {
-            color: #666;
-            margin-top: 5px;
+            color: #ccc;
+            margin-top: 8px;
+            font-size: 0.9rem;
         }
 
+        /* Таблица с эффектом стекла */
         .table-container {
-            background: rgba(255,255,255,0.95);
-            border-radius: 20px;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(12px);
+            border-radius: 25px;
             overflow-x: auto;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            transition: all 0.3s;
+        }
+
+        .table-container:hover {
+            border-color: rgba(102, 126, 234, 0.6);
         }
 
         table {
@@ -107,32 +212,50 @@
         th {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
-            padding: 15px;
+            padding: 18px 15px;
             text-align: left;
             font-weight: 600;
+            font-size: 1rem;
         }
 
         td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #eee;
+            padding: 14px 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            color: #eee;
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+            font-size: 0.95rem;
         }
+
+        /* Анимация строк с задержкой */
+        tr:nth-child(1) td { animation-delay: 0.05s; }
+        tr:nth-child(2) td { animation-delay: 0.1s; }
+        tr:nth-child(3) td { animation-delay: 0.15s; }
+        tr:nth-child(4) td { animation-delay: 0.2s; }
+        tr:nth-child(5) td { animation-delay: 0.25s; }
+        tr:nth-child(6) td { animation-delay: 0.3s; }
+        tr:nth-child(7) td { animation-delay: 0.35s; }
+        tr:nth-child(8) td { animation-delay: 0.4s; }
+        tr:nth-child(9) td { animation-delay: 0.45s; }
+        tr:nth-child(10) td { animation-delay: 0.5s; }
 
         tr:hover {
-            background: #f8f9ff;
+            background: rgba(102, 126, 234, 0.15);
         }
 
+        /* Ранги с неоновыми цветами */
         .rank-1 {
             background: linear-gradient(135deg, #ffd700, #ffb700);
-            color: #333;
+            color: #1a1a2a;
             font-weight: bold;
+            text-shadow: 0 0 5px rgba(255,215,0,0.5);
+            font-size: 1.1rem;
         }
-
         .rank-2 {
             background: linear-gradient(135deg, #c0c0c0, #a8a8a8);
-            color: #333;
+            color: #1a1a2a;
             font-weight: bold;
         }
-
         .rank-3 {
             background: linear-gradient(135deg, #cd7f32, #b86b2a);
             color: white;
@@ -141,7 +264,7 @@
 
         .loading, .error {
             text-align: center;
-            padding: 50px;
+            padding: 60px;
             color: white;
             font-size: 1.2rem;
         }
@@ -153,37 +276,45 @@
         .footer {
             text-align: center;
             margin-top: 30px;
-            color: white;
-            opacity: 0.7;
+            color: #aaa;
+            opacity: 0.8;
             font-size: 0.85rem;
         }
 
         button {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
+            padding: 10px 28px;
+            border-radius: 40px;
             cursor: pointer;
             margin-top: 10px;
             transition: all 0.3s;
+            font-weight: bold;
+            font-size: 0.9rem;
         }
 
         button:hover {
-            background: #5a67d8;
-            transform: translateY(-2px);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
         }
 
         @media (max-width: 768px) {
-            .header h1 { font-size: 1.8rem; }
-            th, td { padding: 8px; font-size: 12px; }
+            body { padding: 10px; }
+            .header h1 { font-size: 2rem; }
+            th, td { padding: 10px 8px; font-size: 11px; }
+            .stat-card h3 { font-size: 1.8rem; }
+            .stat-card p { font-size: 0.8rem; }
         }
     </style>
 </head>
 <body>
+    <!-- Анимированные частицы фона -->
+    <div class="particles" id="particles"></div>
+
     <div class="container">
         <div class="header">
-            <h1>🎮 GORILLAZ — Рейтинг гильдии</h1>
+            <h1>🎮 GORILLAZ — РЕЙТИНГ ГИЛЬДИИ</h1>
             <p>Система подсчёта баллов • Обновляется автоматически</p>
         </div>
 
@@ -232,6 +363,28 @@
         
         let players = [];
         
+        // ============================================
+        // СОЗДАНИЕ ЧАСТИЦ
+        // ============================================
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 60; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const size = Math.random() * 6 + 2;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDuration = Math.random() * 12 + 6 + 's';
+                particle.style.animationDelay = Math.random() * 8 + 's';
+                particle.style.opacity = Math.random() * 0.5 + 0.2;
+                container.appendChild(particle);
+            }
+        }
+        
+        // ============================================
+        // ОСНОВНАЯ ЛОГИКА
+        // ============================================
         async function loadData() {
             const loading = document.getElementById('loading');
             const table = document.getElementById('ratingTable');
@@ -300,7 +453,7 @@
                         if (!isNaN(add)) change += add;
                         if (!isNaN(subtract)) change -= subtract;
                         
-                        // ✅ СОХРАНЯЕМ ВСЕХ ИГРОКОВ, ДАЖЕ С 0 БАЛЛОВ
+                        // Сохраняем всех игроков, даже с 0 баллов
                         if (playerScores[name]) {
                             playerScores[name] += change;
                         } else {
@@ -383,6 +536,8 @@
         
         document.getElementById('searchInput').addEventListener('input', () => renderTable());
         
+        // Запуск
+        createParticles();
         loadData();
         setInterval(loadData, 60000);
     </script>

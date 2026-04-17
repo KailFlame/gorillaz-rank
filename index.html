@@ -202,16 +202,27 @@
     </div>
 
     <script>
-        // ID ВАШЕЙ ТАБЛИЦЫ (из адресной строки)
+        // ⚠️ ВАШ ID ТАБЛИЦЫ
         const SPREADSHEET_ID = '11G7D8K9N8HqHJ0l6uLzzzbQCeUrG1FmS9trZ5Blp7n4';
         
-        // Используем публичный прокси для обхода CORS
-        const PROXY_URL = 'https://api.allorigins.win/raw?url=';
+        // Используем разные источники для обхода CORS
+        let currentProxy = 0;
+        const PROXIES = [
+            'https://api.allorigins.win/raw?url=',
+            'https://corsproxy.io/?',
+            'https://cors-anywhere.herokuapp.com/'
+        ];
         
-        // Формируем URL для CSV экспорта
-        const CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv`;
-        
-        let players = [];
+        async function fetchWithProxy(url, proxyIndex) {
+            const proxyUrl = PROXIES[proxyIndex] + encodeURIComponent(url);
+            console.log(`Попытка ${proxyIndex + 1}:`, proxyUrl);
+            
+            const response = await fetch(proxyUrl);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            return response;
+        }
         
         async function loadData() {
             const loadingEl = document.getElementById('loading');
@@ -223,123 +234,195 @@
             tableEl.style.display = 'none';
             errorEl.style.display = 'none';
             
+            // Пробуем загрузить данные напрямую (без прокси) сначала
+            const directUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=SpiderPoints`;
+            
             try {
-                // Используем прокси для запроса
-                const proxyUrl = PROXY_URL + encodeURIComponent(CSV_URL);
-                console.log('Запрос через прокси:', proxyUrl);
+                // Пробуем прямой запрос
+                console.log('Пробуем прямой запрос...');
+                const directResponse = await fetch(directUrl);
                 
-                const response = await fetch(proxyUrl);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                
-                const csvText = await response.text();
-                console.log('Получено символов:', csvText.length);
-                
-                // Парсим CSV
-                const lines = csvText.split('\n');
-                console.log('Строк в файле:', lines.length);
-                
-                if (lines.length < 2) {
-                    throw new Error('Файл пуст');
-                }
-                
-                // Получаем заголовки
-                const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
-                console.log('Заголовки:', headers);
-                
-                // Ищем колонки "Игрок" и "Баллы"
-                let nameCol = -1;
-                let scoreCol = -1;
-                
-                for (let i = 0; i < headers.length; i++) {
-                    const h = headers[i];
-                    if (h === 'Игрок' || h === 'Ник игрока' || h === '🏆 Игрок') {
-                        nameCol = i;
-                    }
-                    if (h === 'Баллы' || h === '⭐ Баллы') {
-                        scoreCol = i;
+                if (directResponse.ok) {
+                    const text = await directResponse.text();
+                    const jsonText = text.substring(47, text.length - 2);
+                    const data = JSON.parse(jsonText);
+                    
+                    if (data.table && data.table.rows) {
+                        processData(data.table);
+                        loadingEl.style.display = 'none';
+                        tableEl.style.display = 'table';
+                        document.getElementById('updateTime').innerText = new Date().toLocaleString();
+                        return;
                     }
                 }
-                
-                console.log('Колонка имени:', nameCol);
-                console.log('Колонка баллов:', scoreCol);
-                
-                if (nameCol === -1 || scoreCol === -1) {
-                    // Если не нашли, попробуем найти по позиции (G и H это колонки 6 и 7)
-                    if (headers.length > 6 && headers[6] === 'Игрок') nameCol = 6;
-                    if (headers.length > 7 && headers[7] === 'Баллы') scoreCol = 7;
-                }
-                
-                if (nameCol === -1 || scoreCol === -1) {
-                    throw new Error(`Не найдены колонки. Доступные заголовки: ${headers.join(', ')}`);
-                }
-                
-                // Собираем данные
-                const playerScores = {};
-                
-                for (let i = 1; i < lines.length; i++) {
-                    if (!lines[i].trim()) continue;
-                    
-                    // Парсим строку CSV
-                    const row = [];
-                    let inQuote = false;
-                    let current = '';
-                    const line = lines[i];
-                    
-                    for (let j = 0; j < line.length; j++) {
-                        const char = line[j];
-                        if (char === '"') {
-                            inQuote = !inQuote;
-                        } else if (char === ',' && !inQuote) {
-                            row.push(current.replace(/^"|"$/g, '').trim());
-                            current = '';
-                        } else {
-                            current += char;
-                        }
-                    }
-                    row.push(current.replace(/^"|"$/g, '').trim());
-                    
-                    const playerName = row[nameCol];
-                    const score = parseFloat(row[scoreCol]);
-                    
-                    if (playerName && playerName !== '' && !isNaN(score) && playerName !== 'Игрок' && playerName !== 'Ник игрока') {
-                        if (playerScores[playerName]) {
-                            playerScores[playerName] += score;
-                        } else {
-                            playerScores[playerName] = score;
-                        }
-                    }
-                }
-                
-                // Преобразуем в массив и сортируем
-                players = Object.entries(playerScores).map(([name, score]) => ({ name, score }));
-                players.sort((a, b) => b.score - a.score);
-                
-                console.log('Найдено игроков:', players.length);
-                
-                if (players.length === 0) {
-                    throw new Error('Нет данных о игроках. Проверьте колонки в таблице.');
-                }
-                
-                // Отображаем
-                renderTable();
-                updateStats();
-                
-                loadingEl.style.display = 'none';
-                tableEl.style.display = 'table';
-                document.getElementById('updateTime').innerText = new Date().toLocaleString();
-                
-            } catch (error) {
-                console.error('Ошибка:', error);
-                loadingEl.style.display = 'none';
-                errorEl.style.display = 'block';
-                errorEl.innerHTML = `❌ Ошибка: ${error.message}<br><br>1. Убедитесь, что таблица опубликована (Файл → Опубликовать в интернете)<br>2. Нажмите "Опубликовать" заново<br>3. Обновите страницу`;
+            } catch (e) {
+                console.log('Прямой запрос не удался:', e.message);
             }
+            
+            // Если прямой запрос не сработал, пробуем CSV через прокси
+            const csvUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv`;
+            
+            for (let i = 0; i < PROXIES.length; i++) {
+                try {
+                    const response = await fetchWithProxy(csvUrl, i);
+                    const csvText = await response.text();
+                    
+                    if (csvText && csvText.length > 100) {
+                        processCSV(csvText);
+                        loadingEl.style.display = 'none';
+                        tableEl.style.display = 'table';
+                        document.getElementById('updateTime').innerText = new Date().toLocaleString();
+                        return;
+                    }
+                } catch (e) {
+                    console.log(`Прокси ${i + 1} не сработал:`, e.message);
+                }
+            }
+            
+            // Если ничего не сработало, показываем ошибку
+            loadingEl.style.display = 'none';
+            errorEl.style.display = 'block';
+            errorEl.innerHTML = `
+                ❌ Не удалось загрузить данные.<br><br>
+                <strong>Пожалуйста, выполните эти шаги:</strong><br><br>
+                1. Откройте вашу Google Таблицу<br>
+                2. Нажмите <strong>Файл → Опубликовать в интернете</strong><br>
+                3. Нажмите кнопку <strong>"Опубликовать"</strong><br>
+                4. Скопируйте ссылку и убедитесь, что она начинается с https://docs.google.com/...<br>
+                5. Обновите эту страницу через 1-2 минуты<br><br>
+                <button onclick="location.reload()">🔄 Обновить страницу</button>
+            `;
         }
         
-        function renderTable() {
+        function processData(table) {
+            const rows = table.rows;
+            const cols = table.cols;
+            
+            let nameCol = -1;
+            let scoreCol = -1;
+            
+            for (let i = 0; i < cols.length; i++) {
+                const label = cols[i].label;
+                if (label === 'Игрок' || label === '🏆 Игрок' || label === 'Ник игрока') {
+                    nameCol = i;
+                }
+                if (label === 'Баллы' || label === '⭐ Баллы') {
+                    scoreCol = i;
+                }
+            }
+            
+            if (nameCol === -1 || scoreCol === -1) {
+                // Если не нашли, пробуем по позиции (колонки G и H)
+                if (cols.length > 6 && cols[6].label === 'Игрок') nameCol = 6;
+                if (cols.length > 7 && cols[7].label === 'Баллы') scoreCol = 7;
+            }
+            
+            if (nameCol === -1 || scoreCol === -1) {
+                throw new Error('Колонки не найдены');
+            }
+            
+            const playersMap = new Map();
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                if (row.c && row.c[nameCol] && row.c[scoreCol]) {
+                    const name = row.c[nameCol].v;
+                    let score = parseFloat(row.c[scoreCol].v);
+                    
+                    if (name && !isNaN(score) && name !== 'Игрок' && name !== '🏆 Игрок') {
+                        if (playersMap.has(name)) {
+                            playersMap.set(name, playersMap.get(name) + score);
+                        } else {
+                            playersMap.set(name, score);
+                        }
+                    }
+                }
+            }
+            
+            displayPlayers(playersMap);
+        }
+        
+        function processCSV(csvText) {
+            const lines = csvText.split('\n');
+            if (lines.length < 2) {
+                throw new Error('CSV пуст');
+            }
+            
+            const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
+            
+            let nameCol = -1;
+            let scoreCol = -1;
+            
+            for (let i = 0; i < headers.length; i++) {
+                const h = headers[i];
+                if (h === 'Игрок' || h === 'Ник игрока' || h === '🏆 Игрок') {
+                    nameCol = i;
+                }
+                if (h === 'Баллы' || h === '⭐ Баллы') {
+                    scoreCol = i;
+                }
+            }
+            
+            // Если не нашли, пробуем по позиции (колонки G и H это 6 и 7)
+            if (nameCol === -1 && headers.length > 6 && headers[6] === 'Игрок') nameCol = 6;
+            if (scoreCol === -1 && headers.length > 7 && headers[7] === 'Баллы') scoreCol = 7;
+            
+            if (nameCol === -1 || scoreCol === -1) {
+                throw new Error(`Колонки не найдены. Заголовки: ${headers.join(', ')}`);
+            }
+            
+            const playersMap = new Map();
+            
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                
+                // Парсим CSV
+                const row = [];
+                let inQuote = false;
+                let current = '';
+                const line = lines[i];
+                
+                for (let j = 0; j < line.length; j++) {
+                    const char = line[j];
+                    if (char === '"') {
+                        inQuote = !inQuote;
+                    } else if (char === ',' && !inQuote) {
+                        row.push(current.replace(/^"|"$/g, '').trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                row.push(current.replace(/^"|"$/g, '').trim());
+                
+                const name = row[nameCol];
+                const score = parseFloat(row[scoreCol]);
+                
+                if (name && !isNaN(score) && name !== 'Игрок' && name !== '🏆 Игрок' && name !== 'Ник игрока') {
+                    if (playersMap.has(name)) {
+                        playersMap.set(name, playersMap.get(name) + score);
+                    } else {
+                        playersMap.set(name, score);
+                    }
+                }
+            }
+            
+            displayPlayers(playersMap);
+        }
+        
+        function displayPlayers(playersMap) {
+            if (playersMap.size === 0) {
+                throw new Error('Нет данных об игроках');
+            }
+            
+            const players = Array.from(playersMap.entries()).map(([name, score]) => ({ name, score }));
+            players.sort((a, b) => b.score - a.score);
+            
+            renderTable(players);
+            updateStats(players);
+        }
+        
+        function renderTable(players) {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             let filtered = players;
             
@@ -366,7 +449,7 @@
             }
         }
         
-        function updateStats() {
+        function updateStats(players) {
             document.getElementById('totalPlayers').innerText = players.length;
             document.getElementById('topScore').innerText = players.length > 0 ? players[0].score : 0;
             const avgScore = players.length > 0 ? (players.reduce((a,b) => a + b.score, 0) / players.length).toFixed(1) : 0;
@@ -379,13 +462,20 @@
             return div.innerHTML;
         }
         
-        document.getElementById('searchInput').addEventListener('input', () => renderTable());
+        document.getElementById('searchInput').addEventListener('input', () => {
+            // Нужно перерисовать таблицу с текущими данными
+            // Для этого сохраним последние данные в переменную
+            if (window.lastPlayers) {
+                renderTable(window.lastPlayers);
+            }
+        });
+        
+        // Сохраняем последние данные для поиска
+        let originalRenderTable = renderTable;
+        window.renderTableOriginal = renderTable;
         
         // Загружаем данные
         loadData();
-        
-        // Автообновление каждые 60 секунд
-        setInterval(loadData, 60000);
     </script>
 </body>
 </html>

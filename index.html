@@ -357,9 +357,14 @@
         // НАСТРОЙКИ (ЗАМЕНИ НА СВОИ)
         // ============================================
         const SHEET_ID = '1S1RiKUiEcYbcax5nhWeA13_GNgh_6hstL1ebZhx6o1k';
-        const NAME_COL = 0;      // колонка A — "Ник игрока"
-        const ADD_COL = 1;       // колонка B — "Добавить"
-        const SUBTRACT_COL = 2;  // колонка C — "Списать"
+        
+        // Список листов для загрузки
+        const SHEETS = [
+            { name: 'SpiderPoints', nameCol: 0, addCol: 1, subtractCol: 2 },
+            { name: 'Кта', nameCol: 0, addCol: 1, subtractCol: 2 },
+            { name: 'Ава пэпэ', nameCol: 0, addCol: 1, subtractCol: 2 },
+            { name: 'Прочее', nameCol: 0, addCol: 1, subtractCol: 2 }
+        ];
         
         let players = [];
         
@@ -383,43 +388,29 @@
         }
         
         // ============================================
-        // ОСНОВНАЯ ЛОГИКА
+        // ЗАГРУЗКА ДАННЫХ С ЛИСТА
         // ============================================
-        async function loadData() {
-            const loading = document.getElementById('loading');
-            const table = document.getElementById('ratingTable');
-            const errorMsg = document.getElementById('errorMsg');
-            
-            loading.style.display = 'block';
-            loading.innerHTML = '🔄 Загрузка данных...';
-            table.style.display = 'none';
-            errorMsg.style.display = 'none';
+        async function loadSheetData(sheet) {
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet.name)}`;
+            console.log(`Загрузка листа ${sheet.name}:`, url);
             
             try {
-                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
-                console.log('Запрос:', url);
-                
                 const response = await fetch(url);
-                
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                    console.warn(`Лист ${sheet.name} не загружен: HTTP ${response.status}`);
+                    return {};
                 }
                 
                 const csvText = await response.text();
-                console.log('Получено символов:', csvText.length);
-                
-                if (csvText.includes('<!DOCTYPE') || csvText.includes('/*O_o*/')) {
-                    throw new Error('Таблица не опубликована публично');
+                if (csvText.includes('<!DOCTYPE') || csvText.includes('/*O_o*/') || csvText.length < 50) {
+                    console.warn(`Лист ${sheet.name} не опубликован или пуст`);
+                    return {};
                 }
                 
                 const lines = csvText.split('\n');
-                if (lines.length < 2) {
-                    throw new Error('Нет данных');
-                }
+                if (lines.length < 2) return {};
                 
                 const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
-                console.log('Заголовки:', headers);
-                
                 const playerScores = {};
                 
                 for (let i = 1; i < lines.length; i++) {
@@ -444,31 +435,59 @@
                     }
                     cells.push(current.replace(/^"|"$/g, '').trim());
                     
-                    const name = cells[NAME_COL];
-                    const add = parseFloat(cells[ADD_COL]);
-                    const subtract = parseFloat(cells[SUBTRACT_COL]);
+                    const name = cells[sheet.nameCol];
+                    const add = parseFloat(cells[sheet.addCol]);
+                    const subtract = parseFloat(cells[sheet.subtractCol]);
                     
-                    if (name && name !== '' && name !== headers[NAME_COL] && name !== 'Ник игрока') {
+                    if (name && name !== '' && name !== headers[sheet.nameCol] && name !== 'Ник игрока') {
                         let change = 0;
                         if (!isNaN(add)) change += add;
                         if (!isNaN(subtract)) change -= subtract;
                         
-                        // Сохраняем всех игроков, даже с 0 баллов
-                        if (playerScores[name]) {
-                            playerScores[name] += change;
-                        } else {
-                            playerScores[name] = change;
-                        }
+                        playerScores[name] = (playerScores[name] || 0) + change;
                     }
                 }
                 
-                players = Object.entries(playerScores).map(([n, s]) => ({ name: n, score: s }));
+                console.log(`Лист ${sheet.name}: найдено ${Object.keys(playerScores).length} игроков`);
+                return playerScores;
+                
+            } catch (error) {
+                console.warn(`Ошибка загрузки листа ${sheet.name}:`, error.message);
+                return {};
+            }
+        }
+        
+        // ============================================
+        // ОСНОВНАЯ ФУНКЦИЯ ЗАГРУЗКИ
+        // ============================================
+        async function loadData() {
+            const loading = document.getElementById('loading');
+            const table = document.getElementById('ratingTable');
+            const errorMsg = document.getElementById('errorMsg');
+            
+            loading.style.display = 'block';
+            loading.innerHTML = '🔄 Загрузка данных со всех листов...';
+            table.style.display = 'none';
+            errorMsg.style.display = 'none';
+            
+            try {
+                // Загружаем данные со всех листов
+                const allScores = {};
+                
+                for (const sheet of SHEETS) {
+                    const sheetScores = await loadSheetData(sheet);
+                    for (const [name, score] of Object.entries(sheetScores)) {
+                        allScores[name] = (allScores[name] || 0) + score;
+                    }
+                }
+                
+                players = Object.entries(allScores).map(([n, s]) => ({ name: n, score: s }));
                 players.sort((a, b) => b.score - a.score);
                 
-                console.log('Найдено игроков:', players.length);
+                console.log('Всего игроков:', players.length);
                 
                 if (players.length === 0) {
-                    throw new Error('Нет данных. Проверьте, что в колонках A и B есть данные');
+                    throw new Error('Нет данных. Проверьте, что листы опубликованы и содержат данные');
                 }
                 
                 renderTable();
@@ -490,10 +509,8 @@
                     3️⃣ Выберите <strong>"Все, у кого есть ссылка"</strong><br>
                     4️⃣ Нажмите <strong>"Готово"</strong><br>
                     5️⃣ <strong>Файл → Опубликовать в интернете</strong><br>
-                    6️⃣ Выберите <strong>"Вся таблица"</strong><br>
-                    7️⃣ Выберите формат <strong>"Значения, разделенные запятыми (.csv)"</strong><br>
-                    8️⃣ Нажмите <strong>"Опубликовать"</strong><br>
-                    9️⃣ Обновите эту страницу через 1 минуту
+                    6️⃣ Опубликуйте <strong>каждый лист</strong> (SpiderPoints, Кта, Ава пэпэ, Прочее) в формате CSV<br>
+                    7️⃣ Обновите эту страницу через 1 минуту
                 `;
             }
         }

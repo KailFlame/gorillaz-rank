@@ -222,10 +222,8 @@
     </div>
 
     <script>
-        // ============================================
         // ⚠️ ВСТАВЬ СВОЙ ID ТАБЛИЦЫ (из адресной строки)
-        // ============================================
-        // Пример: const SHEET_ID = '1ABC123xyz789';
+        // Твой правильный ID:
         const SHEET_ID = '11G7D8K9N8HqHJ0l6uLzzzbQCeUrG1FmS9trZ5Blp7n4';
         
         let players = [];
@@ -241,7 +239,6 @@
             errorMsg.style.display = 'none';
             
             try {
-                // Пробуем получить данные через JSON API
                 const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
                 console.log('Запрос:', url);
                 
@@ -254,12 +251,10 @@
                 const text = await response.text();
                 console.log('Получено символов:', text.length);
                 
-                // Проверяем, не вернулась ли ошибка
                 if (text.includes('/*O_o*/')) {
                     throw new Error('Таблица не опубликована публично');
                 }
                 
-                // Убираем префикс Google
                 let jsonText = text;
                 if (text.startsWith('google.visualization.Query.setResponse(')) {
                     jsonText = text.substring(47, text.length - 2);
@@ -274,7 +269,6 @@
                 const cols = data.table.cols;
                 console.log('Колонки:', cols.map(c => c.label));
                 
-                // Ищем колонки "Игрок" и "Баллы"
                 let nameCol = -1, scoreCol = -1;
                 for (let i = 0; i < cols.length; i++) {
                     const label = cols[i].label;
@@ -282,7 +276,6 @@
                     if (label === 'Баллы' || label === '⭐ Баллы') scoreCol = i;
                 }
                 
-                // Если не нашли, берём первую текстовую и первую числовую колонки
                 if (nameCol === -1) {
                     for (let i = 0; i < cols.length; i++) {
                         if (cols[i].type === 'string') {
@@ -304,7 +297,6 @@
                     throw new Error(`Не найдены колонки. Доступные: ${cols.map(c => c.label || c.type).join(', ')}`);
                 }
                 
-                // Собираем данные
                 const playerScores = {};
                 for (const row of data.table.rows) {
                     if (!row.c) continue;
@@ -312,11 +304,7 @@
                     const score = parseFloat(row.c[scoreCol]?.v);
                     
                     if (name && !isNaN(score) && name !== 'Игрок' && name !== 'Ник игрока') {
-                        if (playerScores[name]) {
-                            playerScores[name] += score;
-                        } else {
-                            playerScores[name] = score;
-                        }
+                        playerScores[name] = (playerScores[name] || 0) + score;
                     }
                 }
                 

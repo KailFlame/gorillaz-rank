@@ -71,7 +71,6 @@
         .rank-3 { background: linear-gradient(135deg, #cd7f32, #b86b2a); color: white; font-weight: bold; }
         .loading, .error { text-align: center; padding: 50px; color: white; font-size: 1.2rem; }
         .error { color: #ff6b6b; }
-        .debug { background: #1a1a2e; color: #00ff88; padding: 15px; border-radius: 10px; margin-top: 20px; font-family: monospace; font-size: 12px; overflow-x: auto; white-space: pre-wrap; }
         .footer { text-align: center; margin-top: 30px; color: white; opacity: 0.7; }
         button { background: #667eea; color: white; border: none; padding: 8px 16px; border-radius: 20px; cursor: pointer; margin-top: 10px; }
     </style>
@@ -105,48 +104,99 @@
             </table>
         </div>
 
-        <!-- Блок отладки — показывает, что нашёл скрипт -->
-        <div id="debugPanel" class="debug" style="display:none;"></div>
-
         <div class="footer">
             📅 Последнее обновление: <span id="updateTime">—</span>
             <br>
             <button onclick="loadData()">🔄 Обновить вручную</button>
-            <button onclick="showDebug()">🐛 Показать отладку</button>
         </div>
     </div>
 
     <script>
-        // ==================== НАСТРОЙКИ ====================
-        // ⚠️ ВСТАВЬ СВОЙ ID ТАБЛИЦЫ:
-        const SPREADSHEET_ID = '1lG7D8K9N8HqHJol6uLzzzbQCeUrG1FmS9trZSBlp7n4';
+        // ID ВАШЕЙ ТАБЛИЦЫ
+        const SPREADSHEET_ID = '11G7D8K9N8HqHJ0l6uLzzzbQCeUrG1FmS9trZ5Blp7n4';
         
-        const SHEETS = ['SpiderPoints', 'Кта', 'Ава пэпэ', 'Прочее'];
+        // ⚠️ ВАЖНО: Замените gid на правильные ID ваших листов!
+        // Как найти gid: откройте лист в таблице и посмотрите на #gid=xxxxx в адресной строке
+        const SHEETS = [
+            { name: 'SpiderPoints', gid: '1778513716' },
+            { name: 'Кта', gid: '1233058331' },
+            { name: 'Ава пэпэ', gid: '536987907' },
+            { name: 'Прочее', gid: '1910021104' }
+        ];
         
-        // ==================== ПЕРЕМЕННЫЕ ====================
         let allData = [];
         let currentSheet = 'all';
         let isLoading = false;
-        let debugInfo = [];
         
-        function addDebug(msg) {
-            debugInfo.push(new Date().toLocaleTimeString() + ': ' + msg);
-            console.log(msg);
+        async function loadSheet(sheet) {
+            const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=${sheet.gid}`;
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const csvText = await response.text();
+            
+            // Парсим CSV
+            const lines = csvText.split('\n');
+            if (lines.length < 2) return [];
+            
+            const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
+            
+            // Ищем колонки с игроком и баллами
+            let nameCol = -1;
+            let scoreCol = -1;
+            
+            for (let i = 0; i < headers.length; i++) {
+                const h = headers[i];
+                if (h === '🏆 Игрок' || h === 'Игрок') nameCol = i;
+                if (h === '⭐ Баллы' || h === 'Баллы') scoreCol = i;
+            }
+            
+            if (nameCol === -1 || scoreCol === -1) return [];
+            
+            const result = [];
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                
+                // Простой парсинг CSV (учитывает кавычки)
+                let row = [];
+                let inQuote = false;
+                let current = '';
+                const line = lines[i];
+                
+                for (let j = 0; j < line.length; j++) {
+                    const char = line[j];
+                    if (char === '"') {
+                        inQuote = !inQuote;
+                    } else if (char === ',' && !inQuote) {
+                        row.push(current.replace(/^"|"$/g, '').trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                row.push(current.replace(/^"|"$/g, '').trim());
+                
+                const playerName = row[nameCol];
+                const score = parseFloat(row[scoreCol]);
+                
+                if (playerName && playerName !== '🏆 Игрок' && playerName !== 'Игрок' && !isNaN(score)) {
+                    result.push({
+                        player: playerName,
+                        score: score,
+                        activity: sheet.name
+                    });
+                }
+            }
+            
+            return result;
         }
         
-        function showDebug() {
-            const panel = document.getElementById('debugPanel');
-            panel.innerHTML = '<strong>🐛 Отладочная информация:</strong><br><br>' + debugInfo.join('<br>');
-            panel.style.display = 'block';
-            setTimeout(() => { panel.style.display = 'none'; }, 10000);
-        }
-        
-        // ==================== ЗАГРУЗКА ====================
         async function loadData() {
             if (isLoading) return;
             isLoading = true;
-            debugInfo = [];
-            addDebug('🚀 Начало загрузки данных');
             
             const loadingEl = document.getElementById('loading');
             const tableEl = document.getElementById('ratingTable');
@@ -159,95 +209,33 @@
             
             allData = [];
             
-            try {
-                for (const sheetName of SHEETS) {
-                    addDebug(`📡 Загрузка листа: ${sheetName}`);
-                    try {
-                        const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-                        const response = await fetch(url);
-                        
-                        if (!response.ok) {
-                            addDebug(`❌ Ошибка HTTP ${response.status} для листа ${sheetName}`);
-                            continue;
-                        }
-                        
-                        const text = await response.text();
-                        addDebug(`📦 Получено ${text.length} символов для ${sheetName}`);
-                        
-                        const jsonText = text.substring(47, text.length - 2);
-                        const data = JSON.parse(jsonText);
-                        
-                        if (data.table && data.table.rows) {
-                            const rows = data.table.rows;
-                            const cols = data.table.cols;
-                            
-                            addDebug(`📊 Лист ${sheetName}: ${rows.length} строк, ${cols.length} колонок`);
-                            
-                            // Выводим названия колонок
-                            const colNames = cols.map(c => c.label);
-                            addDebug(`📋 Колонки: ${JSON.stringify(colNames)}`);
-                            
-                            let nameCol = -1, scoreCol = -1;
-                            for (let i = 0; i < cols.length; i++) {
-                                const label = cols[i].label;
-                                if (label === '🏆 Игрок' || label === 'Игрок') nameCol = i;
-                                if (label === '⭐ Баллы' || label === 'Баллы') scoreCol = i;
-                            }
-                            
-                            addDebug(`🔍 Поиск колонок: nameCol=${nameCol}, scoreCol=${scoreCol}`);
-                            
-                            if (nameCol !== -1 && scoreCol !== -1) {
-                                let rowCount = 0;
-                                for (let i = 0; i < rows.length; i++) {
-                                    const row = rows[i];
-                                    if (row.c && row.c[nameCol] && row.c[scoreCol]) {
-                                        const playerName = row.c[nameCol].v;
-                                        let score = row.c[scoreCol].v;
-                                        if (playerName && playerName !== '🏆 Игрок' && playerName !== 'Игрок') {
-                                            allData.push({
-                                                player: playerName,
-                                                score: Number(score) || 0,
-                                                activity: sheetName
-                                            });
-                                            rowCount++;
-                                        }
-                                    }
-                                }
-                                addDebug(`✅ Лист ${sheetName}: найдено ${rowCount} игроков`);
-                            } else {
-                                addDebug(`⚠️ Лист ${sheetName}: не найдены нужные колонки`);
-                            }
-                        } else {
-                            addDebug(`⚠️ Лист ${sheetName}: нет таблицы в ответе`);
-                        }
-                    } catch (e) {
-                        addDebug(`❌ Ошибка листа ${sheetName}: ${e.message}`);
-                    }
+            for (const sheet of SHEETS) {
+                try {
+                    console.log(`Загрузка ${sheet.name}...`);
+                    const data = await loadSheet(sheet);
+                    allData.push(...data);
+                    console.log(`✅ ${sheet.name}: ${data.length} записей`);
+                } catch (e) {
+                    console.error(`❌ Ошибка ${sheet.name}:`, e);
                 }
-                
-                addDebug(`📊 Всего собрано данных: ${allData.length} записей`);
-                
-                if (allData.length === 0) {
-                    throw new Error('Нет данных. Проверьте, что на листах есть колонки "🏆 Игрок" и "⭐ Баллы"');
-                }
-                
-                renderFilters();
-                renderTable();
-                updateStats();
-                
-                loadingEl.style.display = 'none';
-                tableEl.style.display = 'table';
-                document.getElementById('updateTime').innerText = new Date().toLocaleString();
-                addDebug('✅ Загрузка завершена успешно');
-                
-            } catch (error) {
-                addDebug(`❌ КРИТИЧЕСКАЯ ОШИБКА: ${error.message}`);
+            }
+            
+            if (allData.length === 0) {
                 loadingEl.style.display = 'none';
                 errorEl.style.display = 'block';
-                errorEl.innerHTML = '❌ ' + error.message + '<br><br>Нажмите "Показать отладку" для деталей';
-            } finally {
+                errorEl.innerHTML = '❌ Нет данных.<br><br>Проверьте:<br>1. Таблица опубликована (Файл → Опубликовать в интернете → CSV)<br>2. Правильные gid листов<br>3. Есть колонки "🏆 Игрок" и "⭐ Баллы"';
                 isLoading = false;
+                return;
             }
+            
+            renderFilters();
+            renderTable();
+            updateStats();
+            
+            loadingEl.style.display = 'none';
+            tableEl.style.display = 'table';
+            document.getElementById('updateTime').innerText = new Date().toLocaleString();
+            isLoading = false;
         }
         
         function renderFilters() {
@@ -355,6 +343,7 @@
         document.getElementById('searchInput').addEventListener('input', () => renderTable());
         
         loadData();
+        setInterval(loadData, 60000);
     </script>
 </body>
 </html>

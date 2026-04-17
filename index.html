@@ -1,486 +1,115 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gorillaz — Рейтинг гильдии</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        /* Анимация пульсации для фона */
-        @keyframes pulse {
-            0% { opacity: 0.4; }
-            50% { opacity: 0.7; }
-            100% { opacity: 0.4; }
-        }
-
-        /* Анимация свечения для карточек */
-        @keyframes glow {
-            0% { box-shadow: 0 0 5px rgba(102, 126, 234, 0.5); }
-            100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.8); }
-        }
-
-        /* Анимация появления строк таблицы */
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
-            padding: 20px;
-            position: relative;
-            background: linear-gradient(135deg, #0a0a2a, #1a1a3a, #0f0f2f);
-            overflow-x: hidden;
-        }
-
-        /* Анимированные частицы фона */
-        .particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            overflow: hidden;
-        }
-
-        .particle {
-            position: absolute;
-            background: rgba(102, 126, 234, 0.3);
-            border-radius: 50%;
-            animation: float linear infinite;
-        }
-
-        @keyframes float {
-            from { transform: translateY(100vh) rotate(0deg); }
-            to { transform: translateY(-100vh) rotate(360deg); }
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Заголовок с неоновым эффектом */
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            color: white;
-        }
-
-        .header h1 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px #667eea, 0 0 20px #667eea, 0 0 30px #667eea;
-            animation: pulse 2s infinite;
-            letter-spacing: 3px;
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.85;
-            color: #ccc;
-        }
-
-        /* Поиск с неоновой рамкой */
-        .controls {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            transition: all 0.3s;
-        }
-
-        .controls:hover {
-            border-color: #667eea;
-            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 14px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 30px;
-            transition: all 0.3s;
-            background: rgba(255,255,255,0.9);
-        }
-
-        .search-box input:focus {
-            outline: none;
-            box-shadow: 0 0 15px #667eea;
-            transform: scale(1.01);
-        }
-
-        /* Статистика — карточки с эффектом стекла */
-        .stats {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-
-        .stat-card {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 20px;
-            flex: 1;
-            min-width: 140px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            transition: all 0.3s;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            border-color: #667eea;
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.2);
-        }
-
-        .stat-card h3 {
-            font-size: 2.2rem;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .stat-card p {
-            color: #ccc;
-            margin-top: 5px;
-        }
-
-        /* Таблица с эффектом стекла */
-        .table-container {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            overflow-x: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 15px;
-            text-align: left;
-            font-weight: 600;
-        }
-
-        td {
-            padding: 12px 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            color: #eee;
-            animation: fadeInUp 0.5s ease-out forwards;
-            opacity: 0;
-        }
-
-        /* Анимация строк с задержкой */
-        tr:nth-child(1) td { animation-delay: 0.05s; }
-        tr:nth-child(2) td { animation-delay: 0.1s; }
-        tr:nth-child(3) td { animation-delay: 0.15s; }
-        tr:nth-child(4) td { animation-delay: 0.2s; }
-        tr:nth-child(5) td { animation-delay: 0.25s; }
-        tr:nth-child(6) td { animation-delay: 0.3s; }
-        tr:nth-child(7) td { animation-delay: 0.35s; }
-        tr:nth-child(8) td { animation-delay: 0.4s; }
-        tr:nth-child(9) td { animation-delay: 0.45s; }
-        tr:nth-child(10) td { animation-delay: 0.5s; }
-
-        tr:hover {
-            background: rgba(102, 126, 234, 0.2);
-        }
-
-        /* Ранги с неоновыми цветами */
-        .rank-1 {
-            background: linear-gradient(135deg, #ffd700, #ffb700);
-            color: #333;
-            font-weight: bold;
-            text-shadow: 0 0 5px rgba(255,215,0,0.5);
-        }
-        .rank-2 {
-            background: linear-gradient(135deg, #c0c0c0, #a8a8a8);
-            color: #333;
-            font-weight: bold;
-        }
-        .rank-3 {
-            background: linear-gradient(135deg, #cd7f32, #b86b2a);
-            color: white;
-            font-weight: bold;
-        }
-
-        .loading, .error {
-            text-align: center;
-            padding: 50px;
-            color: white;
-            font-size: 1.2rem;
-        }
-
-        .error {
-            color: #ff6b6b;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #aaa;
-            opacity: 0.7;
-            font-size: 0.85rem;
-        }
-
-        button {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 10px 25px;
-            border-radius: 30px;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: all 0.3s;
-            font-weight: bold;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        @media (max-width: 768px) {
-            .header h1 { font-size: 1.8rem; }
-            th, td { padding: 8px; font-size: 12px; }
-        }
-    </style>
-</head>
-<body>
-    <!-- Анимированные частицы фона -->
-    <div class="particles" id="particles"></div>
-
-    <div class="container">
-        <div class="header">
-            <h1>🎮 GORILLAZ — Рейтинг гильдии</h1>
-            <p>Система подсчёта баллов • Обновляется автоматически</p>
-        </div>
-
-        <div class="controls">
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="🔍 Поиск игрока...">
-            </div>
-        </div>
-
-        <div class="stats" id="stats">
-            <div class="stat-card"><h3 id="totalPlayers">—</h3><p>Всего игроков</p></div>
-            <div class="stat-card"><h3 id="topScore">—</h3><p>Максимум баллов</p></div>
-            <div class="stat-card"><h3 id="avgScore">—</h3><p>Средний балл</p></div>
-        </div>
-
-        <div class="table-container">
-            <div id="loading" class="loading">🔄 Загрузка данных...</div>
-            <div id="errorMsg" class="error" style="display:none;"></div>
-            <table id="ratingTable" style="display: none;">
-                <thead>
-                    <tr>
-                        <th>🏆 Место</th>
-                        <th>👤 Игрок</th>
-                        <th>⭐ Баллы</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-            </table>
-        </div>
-
-        <div class="footer">
-            📅 Последнее обновление: <span id="updateTime">—</span>
-            <br>
-            <button onclick="loadData()">🔄 Обновить вручную</button>
-        </div>
-    </div>
-
-    <script>
-        // ============================================
-        // ПАРАМЕТРЫ (ЗАМЕНИ НА СВОИ)
-        // ============================================
-        const SHEET_ID = '1S1RiKUiEcYbcax5nhWeA13_GNgh_6hstL1ebZhx6o1k';
-        const NAME_COL = 0;
-        const ADD_COL = 1;
-        const SUBTRACT_COL = 2;
+async function loadData() {
+    const loading = document.getElementById('loading');
+    const table = document.getElementById('ratingTable');
+    const errorMsg = document.getElementById('errorMsg');
+    
+    loading.style.display = 'block';
+    loading.innerHTML = '🔄 Загрузка данных...';
+    table.style.display = 'none';
+    errorMsg.style.display = 'none';
+    
+    try {
+        const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
+        console.log('Запрос:', url);
         
-        // ============================================
-        // СОЗДАНИЕ ЧАСТИЦ
-        // ============================================
-        function createParticles() {
-            const container = document.getElementById('particles');
-            for (let i = 0; i < 50; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                const size = Math.random() * 5 + 2;
-                particle.style.width = size + 'px';
-                particle.style.height = size + 'px';
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.animationDuration = Math.random() * 10 + 5 + 's';
-                particle.style.animationDelay = Math.random() * 5 + 's';
-                particle.style.opacity = Math.random() * 0.5;
-                container.appendChild(particle);
-            }
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
         }
         
-        // ============================================
-        // ОСНОВНАЯ ЛОГИКА
-        // ============================================
-        let players = [];
+        const csvText = await response.text();
+        console.log('Получено символов:', csvText.length);
         
-        async function loadData() {
-            const loading = document.getElementById('loading');
-            const table = document.getElementById('ratingTable');
-            const errorMsg = document.getElementById('errorMsg');
+        if (csvText.includes('<!DOCTYPE') || csvText.includes('/*O_o*/')) {
+            throw new Error('Таблица не опубликована публично');
+        }
+        
+        const lines = csvText.split('\n');
+        if (lines.length < 2) {
+            throw new Error('Нет данных');
+        }
+        
+        const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
+        console.log('Заголовки:', headers);
+        console.log(`Колонка имён: ${NAME_COL} (${headers[NAME_COL]})`);
+        console.log(`Колонка "Добавить": ${ADD_COL} (${headers[ADD_COL]})`);
+        console.log(`Колонка "Списать": ${SUBTRACT_COL} (${headers[SUBTRACT_COL]})`);
+        
+        const playerScores = {};
+        
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
             
-            loading.style.display = 'block';
-            loading.innerHTML = '🔄 Загрузка данных...';
-            table.style.display = 'none';
-            errorMsg.style.display = 'none';
+            // Парсим CSV строку
+            const cells = [];
+            let current = '';
+            let inQuotes = false;
             
-            try {
-                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
-                const response = await fetch(url);
-                
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                
-                const csvText = await response.text();
-                
-                if (csvText.includes('<!DOCTYPE') || csvText.includes('/*O_o*/')) {
-                    throw new Error('Таблица не опубликована публично');
-                }
-                
-                const lines = csvText.split('\n');
-                if (lines.length < 2) throw new Error('Нет данных');
-                
-                const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
-                
-                const playerScores = {};
-                
-                for (let i = 1; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    
-                    const cells = [];
-                    let current = '';
-                    let inQuotes = false;
-                    
-                    for (let j = 0; j < line.length; j++) {
-                        const char = line[j];
-                        if (char === '"') {
-                            inQuotes = !inQuotes;
-                        } else if (char === ',' && !inQuotes) {
-                            cells.push(current.replace(/^"|"$/g, '').trim());
-                            current = '';
-                        } else {
-                            current += char;
-                        }
-                    }
+            for (let j = 0; j < line.length; j++) {
+                const char = line[j];
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
                     cells.push(current.replace(/^"|"$/g, '').trim());
-                    
-                    const name = cells[NAME_COL];
-                    const add = parseFloat(cells[ADD_COL]);
-                    const subtract = parseFloat(cells[SUBTRACT_COL]);
-                    
-                    if (name && name !== '' && name !== headers[NAME_COL] && name !== 'Ник игрока') {
-                        let change = 0;
-                        if (!isNaN(add)) change += add;
-                        if (!isNaN(subtract)) change -= subtract;
-                        
-                        if (change !== 0) {
-                            playerScores[name] = (playerScores[name] || 0) + change;
-                        }
-                    }
+                    current = '';
+                } else {
+                    current += char;
                 }
+            }
+            cells.push(current.replace(/^"|"$/g, '').trim());
+            
+            const name = cells[NAME_COL];
+            const add = parseFloat(cells[ADD_COL]);
+            const subtract = parseFloat(cells[SUBTRACT_COL]);
+            
+            if (name && name !== '' && name !== headers[NAME_COL] && name !== 'Ник игрока') {
+                let change = 0;
+                if (!isNaN(add)) change += add;
+                if (!isNaN(subtract)) change -= subtract;
                 
-                players = Object.entries(playerScores).map(([n, s]) => ({ name: n, score: s }));
-                players.sort((a, b) => b.score - a.score);
-                
-                if (players.length === 0) {
-                    throw new Error('Нет данных');
+                // ✅ ИСПРАВЛЕНО: теперь добавляем всех игроков, даже с 0 баллов
+                if (playerScores[name]) {
+                    playerScores[name] += change;
+                } else {
+                    playerScores[name] = change;
                 }
-                
-                renderTable();
-                updateStats();
-                
-                loading.style.display = 'none';
-                table.style.display = 'table';
-                document.getElementById('updateTime').innerText = new Date().toLocaleString();
-                
-            } catch (error) {
-                console.error('Ошибка:', error);
-                loading.style.display = 'none';
-                errorMsg.style.display = 'block';
-                errorMsg.innerHTML = `❌ Ошибка: ${error.message}<br><br>Проверьте публикацию таблицы`;
             }
         }
         
-        function renderTable() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            let filtered = searchTerm ? players.filter(p => p.name.toLowerCase().includes(searchTerm)) : players;
-            
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-            
-            for (let i = 0; i < filtered.length; i++) {
-                const p = filtered[i];
-                const row = tbody.insertRow();
-                let rankClass = '';
-                if (i === 0) rankClass = 'rank-1';
-                else if (i === 1) rankClass = 'rank-2';
-                else if (i === 2) rankClass = 'rank-3';
-                
-                row.innerHTML = `
-                    <td class="${rankClass}" style="text-align:center; font-weight:bold;">${i+1}</td>
-                    <td style="font-weight:500;">${escapeHtml(p.name)}</td>
-                    <td style="font-weight:bold; color:#667eea;">${p.score}</td>
-                `;
-            }
+        players = Object.entries(playerScores).map(([n, s]) => ({ name: n, score: s }));
+        players.sort((a, b) => b.score - a.score);
+        
+        console.log('Найдено игроков:', players.length);
+        
+        if (players.length === 0) {
+            throw new Error('Нет данных. Проверьте, что в колонках A и B есть данные');
         }
         
-        function updateStats() {
-            document.getElementById('totalPlayers').innerText = players.length;
-            document.getElementById('topScore').innerText = players[0]?.score || 0;
-            const avg = players.length ? (players.reduce((a,b) => a + b.score, 0) / players.length).toFixed(1) : 0;
-            document.getElementById('avgScore').innerText = avg;
-        }
+        renderTable();
+        updateStats();
         
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
+        loading.style.display = 'none';
+        table.style.display = 'table';
+        document.getElementById('updateTime').innerText = new Date().toLocaleString();
         
-        document.getElementById('searchInput').addEventListener('input', () => renderTable());
-        
-        createParticles();
-        loadData();
-        setInterval(loadData, 60000);
-    </script>
-</body>
-</html>
+    } catch (error) {
+        console.error('Ошибка:', error);
+        loading.style.display = 'none';
+        errorMsg.style.display = 'block';
+        errorMsg.innerHTML = `
+            ❌ Ошибка: ${error.message}<br><br>
+            <strong>Сделайте следующее:</strong><br><br>
+            1️⃣ Откройте <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit" target="_blank">вашу таблицу</a><br>
+            2️⃣ Нажмите <strong>синюю кнопку "Настройки доступа"</strong><br>
+            3️⃣ Выберите <strong>"Все, у кого есть ссылка"</strong><br>
+            4️⃣ Нажмите <strong>"Готово"</strong><br>
+            5️⃣ <strong>Файл → Опубликовать в интернете</strong><br>
+            6️⃣ Выберите <strong>"Вся таблица"</strong><br>
+            7️⃣ Выберите формат <strong>"Значения, разделенные запятыми (.csv)"</strong><br>
+            8️⃣ Нажмите <strong>"Опубликовать"</strong><br>
+            9️⃣ Обновите эту страницу через 1 минуту
+        `;
+    }
+}

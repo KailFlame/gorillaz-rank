@@ -2,6 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gorillaz — Рейтинг</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -13,7 +14,7 @@
         }
         .container { max-width: 1200px; margin: 0 auto; }
         .header { text-align: center; margin-bottom: 40px; color: white; }
-        .header h1 { font-size: 2.5rem; }
+        .header h1 { font-size: 2.5rem; margin-bottom: 10px; }
         .search-box {
             background: white;
             border-radius: 30px;
@@ -63,6 +64,7 @@
             padding: 10px 20px;
             border-radius: 25px;
             cursor: pointer;
+            margin-top: 15px;
         }
     </style>
 </head>
@@ -98,8 +100,8 @@
     </div>
 
     <script>
-        // ВАШ ID ТАБЛИЦЫ (из адресной строки)
-        const SHEET_ID = '11G7D8K9N8HqHJ0l6uLzzzbQCeUrG1FmS9trZ5Blp7n4';
+        // ⚠️ ВСТАВЬ СВОЙ ПРАВИЛЬНЫЙ ID ТАБЛИЦЫ (из адресной строки)
+        const SHEET_ID = '1lG7D8K9N8HqHJol6uLzzzbQCeUrG1FmS9trZSBlp7n4';
         
         let players = [];
         
@@ -114,11 +116,14 @@
             errorMsg.style.display = 'none';
             
             try {
-                // Используем JSON API Google Sheets (без сторонних сервисов)
                 const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+                console.log('Запрос:', url);
+                
                 const response = await fetch(url);
                 
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} — проверьте ID и публикацию`);
+                }
                 
                 const text = await response.text();
                 let jsonText = text;
@@ -129,7 +134,7 @@
                 const data = JSON.parse(jsonText);
                 
                 if (!data.table || !data.table.rows) {
-                    throw new Error('Нет данных');
+                    throw new Error('Нет данных в таблице');
                 }
                 
                 const cols = data.table.cols;
@@ -138,8 +143,8 @@
                 let nameCol = -1, scoreCol = -1;
                 for (let i = 0; i < cols.length; i++) {
                     const label = cols[i].label;
-                    if (label === 'Игрок' || label === 'Ник игрока') nameCol = i;
-                    if (label === 'Баллы') scoreCol = i;
+                    if (label === 'Игрок' || label === 'Ник игрока' || label === '🏆 Игрок') nameCol = i;
+                    if (label === 'Баллы' || label === '⭐ Баллы') scoreCol = i;
                 }
                 
                 // Если не нашли, берём первую текстовую и первую числовую
@@ -154,12 +159,16 @@
                     }
                 }
                 
+                if (nameCol === -1 || scoreCol === -1) {
+                    throw new Error('Не найдены колонки "Игрок" и "Баллы"');
+                }
+                
                 const playerScores = {};
                 for (const row of data.table.rows) {
                     if (!row.c) continue;
                     const name = row.c[nameCol]?.v;
                     const score = parseFloat(row.c[scoreCol]?.v);
-                    if (name && !isNaN(score) && name !== 'Игрок') {
+                    if (name && !isNaN(score) && name !== 'Игрок' && name !== 'Ник игрока') {
                         playerScores[name] = (playerScores[name] || 0) + score;
                     }
                 }
@@ -167,7 +176,7 @@
                 players = Object.entries(playerScores).map(([n, s]) => ({ name: n, score: s }));
                 players.sort((a, b) => b.score - a.score);
                 
-                if (players.length === 0) throw new Error('Нет данных');
+                if (players.length === 0) throw new Error('Нет данных об игроках');
                 
                 renderTable();
                 updateStats();
@@ -178,10 +187,16 @@
             } catch (error) {
                 loading.style.display = 'none';
                 errorMsg.style.display = 'block';
-                errorMsg.innerHTML = `❌ Ошибка: ${error.message}<br><br>
-                    1. Откройте доступ к таблице (синяя кнопка → "Все, у кого есть ссылка")<br>
-                    2. Файл → Опубликовать в интернете → Опубликовать<br>
-                    3. Обновите страницу`;
+                errorMsg.innerHTML = `
+                    ❌ Ошибка: ${error.message}<br><br>
+                    <strong>Сделайте следующее:</strong><br><br>
+                    1️⃣ Откройте <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit" target="_blank">вашу таблицу</a><br>
+                    2️⃣ Нажмите <strong>синюю кнопку "Настройки доступа"</strong><br>
+                    3️⃣ Выберите <strong>"Все, у кого есть ссылка"</strong><br>
+                    4️⃣ Нажмите <strong>"Готово"</strong><br>
+                    5️⃣ <strong>Файл → Опубликовать в интернете</strong> → нажмите "Опубликовать"<br>
+                    6️⃣ Обновите эту страницу через 1 минуту
+                `;
             }
         }
         
@@ -203,7 +218,7 @@
                 row.innerHTML = `
                     <td class="${rankClass}" style="text-align:center; font-weight:bold;">${i+1}</td>
                     <td>${escapeHtml(p.name)}NonNull
-                    <td style="font-weight:bold; color:#667eea;">${p.score}</td>
+                    <td style="font-weight:bold; color:#667eea;">${p.score}NonNull
                 `;
             }
         }

@@ -222,8 +222,13 @@
     </div>
 
     <script>
-        // ⚠️ ТВОЙ ID ТАБЛИЦЫ
+        // ⚠️ ТВОЙ ID ТАБЛИЦЫ (из адресной строки)
         const SHEET_ID = '1S1RiKUiEcYbcax5nhWeA13_GNgh_6hstL1ebZhx6o1k';
+        
+        // ПРАВИЛЬНЫЕ ИНДЕКСЫ КОЛОНОК (из твоих заголовков)
+        // "🏆 Игрок" — индекс 6, "⭐ Баллы" — индекс 7
+        const NAME_COL = 6;
+        const SCORE_COL = 7;
         
         let players = [];
         
@@ -261,84 +266,16 @@
                 
                 const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
                 console.log('Заголовки:', headers);
+                console.log(`Колонка имён: ${NAME_COL} (${headers[NAME_COL]})`);
+                console.log(`Колонка баллов: ${SCORE_COL} (${headers[SCORE_COL]})`);
                 
-                // АВТОМАТИЧЕСКИЙ ПОИСК КОЛОНОК
-                let nameCol = -1;
-                let scoreCol = -1;
-                
-                // 1. Ищем по названиям
-                for (let i = 0; i < headers.length; i++) {
-                    const h = headers[i].toLowerCase();
-                    if (h.includes('игрок') || h.includes('ник') || h.includes('player') || h.includes('name')) {
-                        nameCol = i;
-                    }
-                    if (h.includes('балл') || h.includes('score') || h.includes('points')) {
-                        scoreCol = i;
-                    }
-                }
-                
-                // 2. Если не нашли, берём первую текстовую и первую числовую колонку
-                if (nameCol === -1) {
-                    for (let i = 0; i < headers.length; i++) {
-                        if (headers[i] && headers[i] !== '') {
-                            nameCol = i;
-                            break;
-                        }
-                    }
-                }
-                
-                // 3. Ищем числовую колонку по данным
-                if (scoreCol === -1) {
-                    // Проверяем первые 10 строк на наличие чисел
-                    for (let i = 1; i < Math.min(lines.length, 11); i++) {
-                        const line = lines[i];
-                        if (!line) continue;
-                        
-                        const cells = [];
-                        let current = '';
-                        let inQuotes = false;
-                        
-                        for (let j = 0; j < line.length; j++) {
-                            const char = line[j];
-                            if (char === '"') {
-                                inQuotes = !inQuotes;
-                            } else if (char === ',' && !inQuotes) {
-                                cells.push(current.replace(/^"|"$/g, '').trim());
-                                current = '';
-                            } else {
-                                current += char;
-                            }
-                        }
-                        cells.push(current.replace(/^"|"$/g, '').trim());
-                        
-                        for (let k = 0; k < cells.length; k++) {
-                            const val = cells[k];
-                            if (val && !isNaN(parseFloat(val)) && val !== '') {
-                                scoreCol = k;
-                                break;
-                            }
-                        }
-                        if (scoreCol !== -1) break;
-                    }
-                }
-                
-                console.log('Найдена колонка имени:', nameCol);
-                console.log('Найдена колонка баллов:', scoreCol);
-                
-                if (nameCol === -1) {
-                    throw new Error('Не удалось найти колонку с именами игроков');
-                }
-                if (scoreCol === -1) {
-                    throw new Error('Не удалось найти колонку с баллами');
-                }
-                
-                // Собираем данные
                 const playerScores = {};
                 
                 for (let i = 1; i < lines.length; i++) {
                     const line = lines[i].trim();
                     if (!line) continue;
                     
+                    // Парсим CSV строку
                     const cells = [];
                     let current = '';
                     let inQuotes = false;
@@ -356,13 +293,13 @@
                     }
                     cells.push(current.replace(/^"|"$/g, '').trim());
                     
-                    const name = cells[nameCol];
-                    const score = parseFloat(cells[scoreCol]);
+                    const name = cells[NAME_COL];
+                    const score = parseFloat(cells[SCORE_COL]);
                     
                     if (name && name !== '' && !isNaN(score)) {
-                        // Пропускаем строки-заголовки
-                        if (name === headers[nameCol]) continue;
-                        if (name === 'Игрок' || name === 'Ник игрока') continue;
+                        // Пропускаем строку с заголовками
+                        if (name === headers[NAME_COL]) continue;
+                        if (name === '🏆 Игрок') continue;
                         
                         if (playerScores[name]) {
                             playerScores[name] += score;
@@ -378,7 +315,7 @@
                 console.log('Найдено игроков:', players.length);
                 
                 if (players.length === 0) {
-                    throw new Error('Нет данных. Проверьте, что в таблице есть имена и баллы');
+                    throw new Error('Нет данных. Проверьте, что в колонках есть имена и баллы');
                 }
                 
                 renderTable();
@@ -399,8 +336,11 @@
                     2️⃣ Нажмите <strong>синюю кнопку "Настройки доступа"</strong><br>
                     3️⃣ Выберите <strong>"Все, у кого есть ссылка"</strong><br>
                     4️⃣ Нажмите <strong>"Готово"</strong><br>
-                    5️⃣ <strong>Файл → Опубликовать в интернете</strong> → выберите <strong>"Вся таблица"</strong> → формат <strong>"CSV"</strong> → нажмите "Опубликовать"<br>
-                    6️⃣ Обновите эту страницу через 1 минуту
+                    5️⃣ <strong>Файл → Опубликовать в интернете</strong><br>
+                    6️⃣ Выберите <strong>"Вся таблица"</strong><br>
+                    7️⃣ Выберите формат <strong>"Значения, разделенные запятыми (.csv)"</strong><br>
+                    8️⃣ Нажмите <strong>"Опубликовать"</strong><br>
+                    9️⃣ Обновите эту страницу через 1 минуту
                 `;
             }
         }

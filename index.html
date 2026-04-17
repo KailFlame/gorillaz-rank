@@ -2,176 +2,79 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gorillaz — Рейтинг гильдии</title>
+    <title>Gorillaz — Рейтинг</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             min-height: 100vh;
             padding: 20px;
         }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            color: white;
-        }
-
-        .header h1 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.85;
-        }
-
-        .controls {
-            background: rgba(255,255,255,0.95);
-            border-radius: 20px;
-            padding: 20px;
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 40px; color: white; }
+        .header h1 { font-size: 2.5rem; }
+        .search-box {
+            background: white;
+            border-radius: 30px;
+            padding: 12px 20px;
             margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-
         .search-box input {
             width: 100%;
-            padding: 14px 20px;
-            font-size: 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 30px;
-            transition: all 0.3s;
-        }
-
-        .search-box input:focus {
+            border: none;
             outline: none;
-            border-color: #667eea;
+            font-size: 16px;
+            background: transparent;
         }
-
         .stats {
             display: flex;
             gap: 20px;
             margin-bottom: 30px;
             flex-wrap: wrap;
         }
-
         .stat-card {
             background: rgba(255,255,255,0.95);
             border-radius: 20px;
             padding: 20px;
             flex: 1;
-            min-width: 140px;
             text-align: center;
         }
-
-        .stat-card h3 {
-            font-size: 2.2rem;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
+        .stat-card h3 { font-size: 2rem; color: #667eea; }
         .table-container {
-            background: rgba(255,255,255,0.95);
+            background: white;
             border-radius: 20px;
             overflow-x: auto;
         }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 15px;
-            text-align: left;
-        }
-
-        td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #eee;
-        }
-
-        tr:hover {
-            background: #f8f9ff;
-        }
-
-        .rank-1 {
-            background: linear-gradient(135deg, #ffd700, #ffb700);
-            color: #333;
-            font-weight: bold;
-        }
-        .rank-2 {
-            background: linear-gradient(135deg, #c0c0c0, #a8a8a8);
-            color: #333;
-            font-weight: bold;
-        }
-        .rank-3 {
-            background: linear-gradient(135deg, #cd7f32, #b86b2a);
-            color: white;
-            font-weight: bold;
-        }
-
-        .loading, .error {
-            text-align: center;
-            padding: 50px;
-            color: white;
-            font-size: 1.2rem;
-        }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #667eea; color: white; padding: 15px; text-align: left; }
+        td { padding: 12px 15px; border-bottom: 1px solid #eee; }
+        tr:hover { background: #f5f5f5; }
+        .rank-1 { background: #ffd700; color: #333; font-weight: bold; }
+        .rank-2 { background: #c0c0c0; color: #333; font-weight: bold; }
+        .rank-3 { background: #cd7f32; color: white; font-weight: bold; }
+        .loading, .error { text-align: center; padding: 50px; color: white; }
         .error { color: #ff6b6b; }
-
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: white;
-            opacity: 0.7;
-            font-size: 0.85rem;
-        }
-
+        .footer { text-align: center; margin-top: 30px; color: white; opacity: 0.7; }
         button {
             background: #667eea;
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
+            padding: 10px 20px;
+            border-radius: 25px;
             cursor: pointer;
-            margin-top: 10px;
-        }
-
-        @media (max-width: 768px) {
-            .header h1 { font-size: 1.8rem; }
-            th, td { padding: 8px; font-size: 12px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎮 GORILLAZ — Рейтинг гильдии</h1>
+            <h1>🎮 GORILLAZ — Рейтинг</h1>
             <p>Система подсчёта баллов</p>
         </div>
 
-        <div class="controls">
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="🔍 Поиск игрока...">
-            </div>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 Поиск игрока...">
         </div>
 
         <div class="stats" id="stats">
@@ -181,149 +84,116 @@
         </div>
 
         <div class="table-container">
-            <div id="loading" class="loading">🔄 Загрузка данных...</div>
-            <div id="errorMessage" class="error" style="display:none;"></div>
-            <table id="ratingTable" style="display: none;">
-                <thead>
-                    <tr>
-                        <th>🏆 Место</th>
-                        <th>👤 Игрок</th>
-                        <th>⭐ Баллы</th>
-                    </tr>
-                </thead>
+            <div id="loading" class="loading">🔄 Загрузка...</div>
+            <div id="errorMsg" class="error" style="display:none;"></div>
+            <table id="ratingTable" style="display:none;">
+                <thead><tr><th>🏆 Место</th><th>👤 Игрок</th><th>⭐ Баллы</th></tr></thead>
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
 
         <div class="footer">
-            📅 Последнее обновление: <span id="updateTime">—</span><br>
-            <button onclick="loadData()">🔄 Обновить вручную</button>
+            <button onclick="loadData()">🔄 Обновить</button>
         </div>
     </div>
 
     <script>
-        // ⚠️ ВСТАВЬТЕ ВАШ API URL ОТ SHEET.BEST
-        // Пример: const API_URL = 'https://sheet.best/api/sheets/ваш_ключ';
-        const API_URL = 'https://api.sheetbest.com/sheets/59aa28de-6f32-4c46-9e6e-13ac25ee9eca';
+        // ВАШ ID ТАБЛИЦЫ (из адресной строки)
+        const SHEET_ID = '11G7D8K9N8HqHJ0l6uLzzzbQCeUrG1FmS9trZ5Blp7n4';
         
         let players = [];
         
         async function loadData() {
-            const loadingEl = document.getElementById('loading');
-            const tableEl = document.getElementById('ratingTable');
-            const errorEl = document.getElementById('errorMessage');
+            const loading = document.getElementById('loading');
+            const table = document.getElementById('ratingTable');
+            const errorMsg = document.getElementById('errorMsg');
             
-            loadingEl.style.display = 'block';
-            loadingEl.innerHTML = '🔄 Загрузка данных...';
-            tableEl.style.display = 'none';
-            errorEl.style.display = 'none';
-            
-            if (!API_URL || API_URL === 'ВАШ_API_URL_СЮДА') {
-                loadingEl.style.display = 'none';
-                errorEl.style.display = 'block';
-                errorEl.innerHTML = `
-                    ❌ API не настроен.<br><br>
-                    <strong>Сделайте следующее:</strong><br><br>
-                    1️⃣ Зарегистрируйтесь на <a href="https://sheet.best" target="_blank">sheet.best</a><br>
-                    2️⃣ Подключите вашу таблицу<br>
-                    3️⃣ Скопируйте API URL и вставьте его в код вместо ВАШ_API_URL<br>
-                    4️⃣ Загрузите сайт заново
-                `;
-                return;
-            }
+            loading.style.display = 'block';
+            loading.innerHTML = '🔄 Загрузка...';
+            table.style.display = 'none';
+            errorMsg.style.display = 'none';
             
             try {
-                console.log('Загрузка из API:', API_URL);
-                const response = await fetch(API_URL);
+                // Используем JSON API Google Sheets (без сторонних сервисов)
+                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+                const response = await fetch(url);
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const text = await response.text();
+                let jsonText = text;
+                if (text.startsWith('google.visualization.Query.setResponse(')) {
+                    jsonText = text.substring(47, text.length - 2);
                 }
                 
-                const data = await response.json();
-                console.log('Получено данных:', data.length);
+                const data = JSON.parse(jsonText);
                 
-                if (data.length === 0) {
-                    throw new Error('Нет данных в таблице');
+                if (!data.table || !data.table.rows) {
+                    throw new Error('Нет данных');
                 }
                 
-                // Собираем баллы по игрокам
+                const cols = data.table.cols;
+                
+                // Ищем колонки "Игрок" и "Баллы"
+                let nameCol = -1, scoreCol = -1;
+                for (let i = 0; i < cols.length; i++) {
+                    const label = cols[i].label;
+                    if (label === 'Игрок' || label === 'Ник игрока') nameCol = i;
+                    if (label === 'Баллы') scoreCol = i;
+                }
+                
+                // Если не нашли, берём первую текстовую и первую числовую
+                if (nameCol === -1) {
+                    for (let i = 0; i < cols.length; i++) {
+                        if (cols[i].type === 'string') { nameCol = i; break; }
+                    }
+                }
+                if (scoreCol === -1) {
+                    for (let i = 0; i < cols.length; i++) {
+                        if (cols[i].type === 'number') { scoreCol = i; break; }
+                    }
+                }
+                
                 const playerScores = {};
-                
-                for (const row of data) {
-                    // Ищем колонки с игроком и баллами
-                    let name = row['Игрок'] || row['Ник игрока'] || row['🏆 Игрок'];
-                    let score = parseFloat(row['Баллы'] || row['⭐ Баллы'] || row['score']);
-                    
-                    if (!name) {
-                        // Пробуем найти любую текстовую колонку
-                        for (const key in row) {
-                            const val = row[key];
-                            if (typeof val === 'string' && val.length > 0 && !isNaN(parseFloat(val))) {
-                                if (!name && val !== 'Игрок' && val !== 'Ник игрока') {
-                                    name = val;
-                                }
-                            }
-                        }
-                    }
-                    
-                    if (isNaN(score)) {
-                        // Пробуем найти любую числовую колонку
-                        for (const key in row) {
-                            const val = row[key];
-                            if (!isNaN(parseFloat(val)) && typeof val !== 'string') {
-                                score = parseFloat(val);
-                                break;
-                            }
-                        }
-                    }
-                    
-                    if (name && !isNaN(score)) {
-                        if (playerScores[name]) {
-                            playerScores[name] += score;
-                        } else {
-                            playerScores[name] = score;
-                        }
+                for (const row of data.table.rows) {
+                    if (!row.c) continue;
+                    const name = row.c[nameCol]?.v;
+                    const score = parseFloat(row.c[scoreCol]?.v);
+                    if (name && !isNaN(score) && name !== 'Игрок') {
+                        playerScores[name] = (playerScores[name] || 0) + score;
                     }
                 }
                 
-                players = Object.entries(playerScores).map(([name, score]) => ({ name, score }));
+                players = Object.entries(playerScores).map(([n, s]) => ({ name: n, score: s }));
                 players.sort((a, b) => b.score - a.score);
                 
-                console.log('Найдено игроков:', players.length);
-                
-                if (players.length === 0) {
-                    throw new Error('Не найдены колонки "Игрок" и "Баллы"');
-                }
+                if (players.length === 0) throw new Error('Нет данных');
                 
                 renderTable();
                 updateStats();
                 
-                loadingEl.style.display = 'none';
-                tableEl.style.display = 'table';
-                document.getElementById('updateTime').innerText = new Date().toLocaleString();
+                loading.style.display = 'none';
+                table.style.display = 'table';
                 
             } catch (error) {
-                console.error('Ошибка:', error);
-                loadingEl.style.display = 'none';
-                errorEl.style.display = 'block';
-                errorEl.innerHTML = `❌ Ошибка: ${error.message}<br><br>Проверьте, что таблица подключена к Sheet.best`;
+                loading.style.display = 'none';
+                errorMsg.style.display = 'block';
+                errorMsg.innerHTML = `❌ Ошибка: ${error.message}<br><br>
+                    1. Откройте доступ к таблице (синяя кнопка → "Все, у кого есть ссылка")<br>
+                    2. Файл → Опубликовать в интернете → Опубликовать<br>
+                    3. Обновите страницу`;
             }
         }
         
         function renderTable() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            let filtered = players;
-            
-            if (searchTerm) {
-                filtered = players.filter(p => p.name.toLowerCase().includes(searchTerm));
-            }
+            let filtered = searchTerm ? players.filter(p => p.name.toLowerCase().includes(searchTerm)) : players;
             
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
             
             for (let i = 0; i < filtered.length; i++) {
-                const player = filtered[i];
+                const p = filtered[i];
                 const row = tbody.insertRow();
                 let rankClass = '';
                 if (i === 0) rankClass = 'rank-1';
@@ -332,17 +202,17 @@
                 
                 row.innerHTML = `
                     <td class="${rankClass}" style="text-align:center; font-weight:bold;">${i+1}</td>
-                    <td style="font-weight:500;">${escapeHtml(player.name)}</td>
-                    <td style="font-weight:bold; color:#667eea;">${player.score}</td>
+                    <td>${escapeHtml(p.name)}NonNull
+                    <td style="font-weight:bold; color:#667eea;">${p.score}</td>
                 `;
             }
         }
         
         function updateStats() {
             document.getElementById('totalPlayers').innerText = players.length;
-            document.getElementById('topScore').innerText = players.length > 0 ? players[0].score : 0;
-            const avgScore = players.length > 0 ? (players.reduce((a,b) => a + b.score, 0) / players.length).toFixed(1) : 0;
-            document.getElementById('avgScore').innerText = avgScore;
+            document.getElementById('topScore').innerText = players[0]?.score || 0;
+            const avg = players.length ? (players.reduce((a,b) => a + b.score, 0) / players.length).toFixed(1) : 0;
+            document.getElementById('avgScore').innerText = avg;
         }
         
         function escapeHtml(text) {

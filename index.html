@@ -146,6 +146,40 @@
             transform: scale(1.01);
         }
 
+        /* Кнопки фильтров */
+        .filter-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(102, 126, 234, 0.4);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-3px);
+            border-color: #667eea;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-color: transparent;
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.5);
+        }
+
         /* Статистика — карточки с эффектом стекла */
         .stats {
             display: flex;
@@ -305,6 +339,7 @@
             th, td { padding: 10px 8px; font-size: 11px; }
             .stat-card h3 { font-size: 1.8rem; }
             .stat-card p { font-size: 0.8rem; }
+            .filter-btn { padding: 6px 15px; font-size: 0.8rem; }
         }
     </style>
 </head>
@@ -321,6 +356,13 @@
         <div class="controls">
             <div class="search-box">
                 <input type="text" id="searchInput" placeholder="🔍 Поиск игрока...">
+            </div>
+            <div class="filter-buttons" id="filterButtons">
+                <button class="filter-btn active" data-sheet="all">📊 Все активности</button>
+                <button class="filter-btn" data-sheet="SpiderPoints">🕷️ SpiderPoints</button>
+                <button class="filter-btn" data-sheet="Кта">⚔️ Кта</button>
+                <button class="filter-btn" data-sheet="Ава пэпэ">👾 Ава пэпэ</button>
+                <button class="filter-btn" data-sheet="Прочее">📋 Прочее</button>
             </div>
         </div>
 
@@ -339,6 +381,7 @@
                         <th>🏆 Место</th>
                         <th>👤 Игрок</th>
                         <th>⭐ Баллы</th>
+                        <th>📊 Активность</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
@@ -354,7 +397,7 @@
 
     <script>
         // ============================================
-        // НАСТРОЙКИ (ЗАМЕНИ НА СВОИ)
+        // НАСТРОЙКИ (ЗАМЕНИ НА СВОЙ ID)
         // ============================================
         const SHEET_ID = '1S1RiKUiEcYbcax5nhWeA13_GNgh_6hstL1ebZhx6o1k';
         
@@ -366,6 +409,9 @@
             { name: 'Прочее', nameCol: 0, addCol: 1, subtractCol: 2 }
         ];
         
+        // Хранилище данных по листам
+        let allData = []; // { name, score, sheet }
+        let currentSheet = 'all';
         let players = [];
         
         // ============================================
@@ -398,20 +444,20 @@
                 const response = await fetch(url);
                 if (!response.ok) {
                     console.warn(`Лист ${sheet.name} не загружен: HTTP ${response.status}`);
-                    return {};
+                    return [];
                 }
                 
                 const csvText = await response.text();
                 if (csvText.includes('<!DOCTYPE') || csvText.includes('/*O_o*/') || csvText.length < 50) {
                     console.warn(`Лист ${sheet.name} не опубликован или пуст`);
-                    return {};
+                    return [];
                 }
                 
                 const lines = csvText.split('\n');
-                if (lines.length < 2) return {};
+                if (lines.length < 2) return [];
                 
                 const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
-                const playerScores = {};
+                const sheetData = [];
                 
                 for (let i = 1; i < lines.length; i++) {
                     const line = lines[i].trim();
@@ -444,16 +490,20 @@
                         if (!isNaN(add)) change += add;
                         if (!isNaN(subtract)) change -= subtract;
                         
-                        playerScores[name] = (playerScores[name] || 0) + change;
+                        sheetData.push({
+                            name: name,
+                            score: change,
+                            sheet: sheet.name
+                        });
                     }
                 }
                 
-                console.log(`Лист ${sheet.name}: найдено ${Object.keys(playerScores).length} игроков`);
-                return playerScores;
+                console.log(`Лист ${sheet.name}: найдено ${sheetData.length} записей`);
+                return sheetData;
                 
             } catch (error) {
                 console.warn(`Ошибка загрузки листа ${sheet.name}:`, error.message);
-                return {};
+                return [];
             }
         }
         
@@ -472,26 +522,21 @@
             
             try {
                 // Загружаем данные со всех листов
-                const allScores = {};
+                allData = [];
                 
                 for (const sheet of SHEETS) {
-                    const sheetScores = await loadSheetData(sheet);
-                    for (const [name, score] of Object.entries(sheetScores)) {
-                        allScores[name] = (allScores[name] || 0) + score;
-                    }
+                    const sheetData = await loadSheetData(sheet);
+                    allData.push(...sheetData);
                 }
                 
-                players = Object.entries(allScores).map(([n, s]) => ({ name: n, score: s }));
-                players.sort((a, b) => b.score - a.score);
+                console.log('Всего записей:', allData.length);
                 
-                console.log('Всего игроков:', players.length);
-                
-                if (players.length === 0) {
+                if (allData.length === 0) {
                     throw new Error('Нет данных. Проверьте, что листы опубликованы и содержат данные');
                 }
                 
-                renderTable();
-                updateStats();
+                // Обновляем отображение в зависимости от выбранного фильтра
+                updateDisplay();
                 
                 loading.style.display = 'none';
                 table.style.display = 'table';
@@ -515,9 +560,36 @@
             }
         }
         
-        function renderTable() {
+        function updateDisplay() {
+            let filteredData;
+            
+            if (currentSheet === 'all') {
+                // Суммируем баллы по игрокам со всех листов
+                const playerMap = new Map();
+                for (const item of allData) {
+                    playerMap.set(item.name, (playerMap.get(item.name) || 0) + item.score);
+                }
+                players = Array.from(playerMap.entries()).map(([name, score]) => ({ name, score }));
+                players.sort((a, b) => b.score - a.score);
+                renderTable(players, true);
+                updateStats(players);
+            } else {
+                // Показываем данные только с выбранного листа
+                const sheetData = allData.filter(item => item.sheet === currentSheet);
+                const playerMap = new Map();
+                for (const item of sheetData) {
+                    playerMap.set(item.name, (playerMap.get(item.name) || 0) + item.score);
+                }
+                players = Array.from(playerMap.entries()).map(([name, score]) => ({ name, score }));
+                players.sort((a, b) => b.score - a.score);
+                renderTable(players, false);
+                updateStats(players);
+            }
+        }
+        
+        function renderTable(playersData, showSheetColumn) {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            let filtered = searchTerm ? players.filter(p => p.name.toLowerCase().includes(searchTerm)) : players;
+            let filtered = searchTerm ? playersData.filter(p => p.name.toLowerCase().includes(searchTerm)) : playersData;
             
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
@@ -530,18 +602,38 @@
                 else if (i === 1) rankClass = 'rank-2';
                 else if (i === 2) rankClass = 'rank-3';
                 
-                row.innerHTML = `
-                    <td class="${rankClass}" style="text-align:center; font-weight:bold;">${i+1}</td>
-                    <td style="font-weight:500;">${escapeHtml(p.name)}</td>
-                    <td style="font-weight:bold; color:#667eea;">${p.score}</td>
-                `;
+                if (showSheetColumn) {
+                    row.innerHTML = `
+                        <td class="${rankClass}" style="text-align:center; font-weight:bold;">${i+1}</td>
+                        <td style="font-weight:500;">${escapeHtml(p.name)}</td>
+                        <td style="font-weight:bold; color:#667eea;">${p.score}</td>
+                        <td style="color:#aaa;">📊 Все активности</td>
+                    `;
+                } else {
+                    row.innerHTML = `
+                        <td class="${rankClass}" style="text-align:center; font-weight:bold;">${i+1}</td>
+                        <td style="font-weight:500;">${escapeHtml(p.name)}</td>
+                        <td style="font-weight:bold; color:#667eea;">${p.score}</td>
+                        <td style="color:#aaa;">${getSheetIcon(currentSheet)} ${currentSheet}</td>
+                    `;
+                }
             }
         }
         
-        function updateStats() {
-            document.getElementById('totalPlayers').innerText = players.length;
-            document.getElementById('topScore').innerText = players[0]?.score || 0;
-            const avg = players.length ? (players.reduce((a,b) => a + b.score, 0) / players.length).toFixed(1) : 0;
+        function getSheetIcon(sheetName) {
+            const icons = {
+                'SpiderPoints': '🕷️',
+                'Кта': '⚔️',
+                'Ава пэпэ': '👾',
+                'Прочее': '📋'
+            };
+            return icons[sheetName] || '📊';
+        }
+        
+        function updateStats(playersData) {
+            document.getElementById('totalPlayers').innerText = playersData.length;
+            document.getElementById('topScore').innerText = playersData[0]?.score || 0;
+            const avg = playersData.length ? (playersData.reduce((a,b) => a + b.score, 0) / playersData.length).toFixed(1) : 0;
             document.getElementById('avgScore').innerText = avg;
         }
         
@@ -551,10 +643,39 @@
             return div.innerHTML;
         }
         
-        document.getElementById('searchInput').addEventListener('input', () => renderTable());
+        // ============================================
+        // НАСТРОЙКА ФИЛЬТРОВ
+        // ============================================
+        function setupFilters() {
+            const buttons = document.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Обновляем активную кнопку
+                    buttons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    // Меняем текущий лист
+                    currentSheet = btn.dataset.sheet;
+                    
+                    // Обновляем отображение
+                    updateDisplay();
+                });
+            });
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        document.getElementById('searchInput').addEventListener('input', () => {
+            updateDisplay();
+        });
         
         // Запуск
         createParticles();
+        setupFilters();
         loadData();
         setInterval(loadData, 60000);
     </script>

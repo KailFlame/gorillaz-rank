@@ -4,7 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gorillaz — Рейтинг гильдии</title>
+    
+    <!-- ИКОНКА САЙТА (FAVICON) -->
+    <link rel="icon" type="image/png" href="https://emojicdn.elk.sh/🎮">
+    <!-- Альтернативный вариант с эмодзи-иконкой -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.35em' font-size='80'%3E🎮%3C/text%3E%3C/svg%3E">
+    
     <style>
+        /* Весь твой CSS остаётся без изменений */
         * {
             margin: 0;
             padding: 0;
@@ -349,7 +356,7 @@
 
     <div class="container">
         <div class="header">
-            <h1>🎮 GORILLAZ — РЕЙТИНГ ГИЛЬДИИ</h1>
+            <h1>💠 GORILLAZ — РЕЙТИНГ ГИЛЬДИИ</h1>
             <p>Система подсчёта баллов • Обновляется автоматически</p>
         </div>
 
@@ -410,9 +417,8 @@
         ];
         
         // Хранилище данных по листам
-        let allData = []; // { name, score, sheet }
+        let allData = [];
         let currentSheet = 'all';
-        let players = [];
         
         // ============================================
         // СОЗДАНИЕ ЧАСТИЦ
@@ -438,20 +444,13 @@
         // ============================================
         async function loadSheetData(sheet) {
             const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheet.name)}`;
-            console.log(`Загрузка листа ${sheet.name}:`, url);
             
             try {
                 const response = await fetch(url);
-                if (!response.ok) {
-                    console.warn(`Лист ${sheet.name} не загружен: HTTP ${response.status}`);
-                    return [];
-                }
+                if (!response.ok) return [];
                 
                 const csvText = await response.text();
-                if (csvText.includes('<!DOCTYPE') || csvText.includes('/*O_o*/') || csvText.length < 50) {
-                    console.warn(`Лист ${sheet.name} не опубликован или пуст`);
-                    return [];
-                }
+                if (csvText.includes('<!DOCTYPE') || csvText.includes('/*O_o*/') || csvText.length < 50) return [];
                 
                 const lines = csvText.split('\n');
                 if (lines.length < 2) return [];
@@ -463,7 +462,6 @@
                     const line = lines[i].trim();
                     if (!line) continue;
                     
-                    // Парсим CSV строку
                     const cells = [];
                     let current = '';
                     let inQuotes = false;
@@ -498,11 +496,9 @@
                     }
                 }
                 
-                console.log(`Лист ${sheet.name}: найдено ${sheetData.length} записей`);
                 return sheetData;
                 
             } catch (error) {
-                console.warn(`Ошибка загрузки листа ${sheet.name}:`, error.message);
                 return [];
             }
         }
@@ -521,7 +517,6 @@
             errorMsg.style.display = 'none';
             
             try {
-                // Загружаем данные со всех листов
                 allData = [];
                 
                 for (const sheet of SHEETS) {
@@ -529,13 +524,10 @@
                     allData.push(...sheetData);
                 }
                 
-                console.log('Всего записей:', allData.length);
-                
                 if (allData.length === 0) {
-                    throw new Error('Нет данных. Проверьте, что листы опубликованы и содержат данные');
+                    throw new Error('Нет данных. Проверьте, что листы опубликованы');
                 }
                 
-                // Обновляем отображение в зависимости от выбранного фильтра
                 updateDisplay();
                 
                 loading.style.display = 'none';
@@ -543,20 +535,9 @@
                 document.getElementById('updateTime').innerText = new Date().toLocaleString();
                 
             } catch (error) {
-                console.error('Ошибка:', error);
                 loading.style.display = 'none';
                 errorMsg.style.display = 'block';
-                errorMsg.innerHTML = `
-                    ❌ Ошибка: ${error.message}<br><br>
-                    <strong>Сделайте следующее:</strong><br><br>
-                    1️⃣ Откройте <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit" target="_blank">вашу таблицу</a><br>
-                    2️⃣ Нажмите <strong>синюю кнопку "Настройки доступа"</strong><br>
-                    3️⃣ Выберите <strong>"Все, у кого есть ссылка"</strong><br>
-                    4️⃣ Нажмите <strong>"Готово"</strong><br>
-                    5️⃣ <strong>Файл → Опубликовать в интернете</strong><br>
-                    6️⃣ Опубликуйте <strong>каждый лист</strong> (SpiderPoints, Кта, Ава пэпэ, Прочее) в формате CSV<br>
-                    7️⃣ Обновите эту страницу через 1 минуту
-                `;
+                errorMsg.innerHTML = `❌ Ошибка: ${error.message}<br><br>Проверьте публикацию таблиц`;
             }
         }
         
@@ -564,32 +545,30 @@
             let filteredData;
             
             if (currentSheet === 'all') {
-                // Суммируем баллы по игрокам со всех листов
                 const playerMap = new Map();
                 for (const item of allData) {
                     playerMap.set(item.name, (playerMap.get(item.name) || 0) + item.score);
                 }
-                players = Array.from(playerMap.entries()).map(([name, score]) => ({ name, score }));
+                const players = Array.from(playerMap.entries()).map(([name, score]) => ({ name, score }));
                 players.sort((a, b) => b.score - a.score);
                 renderTable(players, true);
                 updateStats(players);
             } else {
-                // Показываем данные только с выбранного листа
                 const sheetData = allData.filter(item => item.sheet === currentSheet);
                 const playerMap = new Map();
                 for (const item of sheetData) {
                     playerMap.set(item.name, (playerMap.get(item.name) || 0) + item.score);
                 }
-                players = Array.from(playerMap.entries()).map(([name, score]) => ({ name, score }));
+                const players = Array.from(playerMap.entries()).map(([name, score]) => ({ name, score }));
                 players.sort((a, b) => b.score - a.score);
                 renderTable(players, false);
                 updateStats(players);
             }
         }
         
-        function renderTable(playersData, showSheetColumn) {
+        function renderTable(players, showSheetColumn) {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            let filtered = searchTerm ? playersData.filter(p => p.name.toLowerCase().includes(searchTerm)) : playersData;
+            let filtered = searchTerm ? players.filter(p => p.name.toLowerCase().includes(searchTerm)) : players;
             
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
@@ -630,10 +609,10 @@
             return icons[sheetName] || '📊';
         }
         
-        function updateStats(playersData) {
-            document.getElementById('totalPlayers').innerText = playersData.length;
-            document.getElementById('topScore').innerText = playersData[0]?.score || 0;
-            const avg = playersData.length ? (playersData.reduce((a,b) => a + b.score, 0) / playersData.length).toFixed(1) : 0;
+        function updateStats(players) {
+            document.getElementById('totalPlayers').innerText = players.length;
+            document.getElementById('topScore').innerText = players[0]?.score || 0;
+            const avg = players.length ? (players.reduce((a,b) => a + b.score, 0) / players.length).toFixed(1) : 0;
             document.getElementById('avgScore').innerText = avg;
         }
         
@@ -643,37 +622,20 @@
             return div.innerHTML;
         }
         
-        // ============================================
-        // НАСТРОЙКА ФИЛЬТРОВ
-        // ============================================
         function setupFilters() {
             const buttons = document.querySelectorAll('.filter-btn');
             buttons.forEach(btn => {
                 btn.addEventListener('click', () => {
-                    // Обновляем активную кнопку
                     buttons.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
-                    
-                    // Меняем текущий лист
                     currentSheet = btn.dataset.sheet;
-                    
-                    // Обновляем отображение
                     updateDisplay();
                 });
             });
         }
         
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
+        document.getElementById('searchInput').addEventListener('input', () => updateDisplay());
         
-        document.getElementById('searchInput').addEventListener('input', () => {
-            updateDisplay();
-        });
-        
-        // Запуск
         createParticles();
         setupFilters();
         loadData();

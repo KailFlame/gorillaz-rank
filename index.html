@@ -222,9 +222,11 @@
     </div>
 
     <script>
-        // ⚠️ ВСТАВЬ СВОЙ ПРАВИЛЬНЫЙ ID ТАБЛИЦЫ (из адресной строки)
+        // ============================================
+        // ⚠️ ВСТАВЬ СВОЙ ID ТАБЛИЦЫ (из адресной строки)
+        // ============================================
         // Пример: const SHEET_ID = '1ABC123xyz789';
-        const SHEET_ID = 'ВСТАВЬ_СВОЙ_ID_СЮДА';
+        const SHEET_ID = '11G7D8K9N8HqHJ0l6uLzzzbQCeUrG1FmS9trZ5Blp7n4';
         
         let players = [];
         
@@ -237,22 +239,6 @@
             loading.innerHTML = '🔄 Загрузка данных...';
             table.style.display = 'none';
             errorMsg.style.display = 'none';
-            
-            // Проверяем, что ID не пустой и не пример
-            if (SHEET_ID === '1lG7D8K9N8HqHJol6uLzzzbQCeUrG1FmS9trZSBlp7n4' || SHEET_ID === '') {
-                loading.style.display = 'none';
-                errorMsg.style.display = 'block';
-                errorMsg.innerHTML = `
-                    ❌ <strong>ID таблицы не настроен!</strong><br><br>
-                    <strong>Сделайте следующее:</strong><br><br>
-                    1️⃣ Откройте <strong>вашу Google Таблицу</strong> в браузере<br>
-                    2️⃣ Скопируйте ID из адресной строки (длинный текст между /d/ и /edit)<br>
-                    3️⃣ Вставьте ID в код вместо <strong>ВСТАВЬ_СВОЙ_ID_СЮДА</strong><br>
-                    4️⃣ Загрузите сайт заново на Vercel<br><br>
-                    <strong>Пример ID:</strong> 1ABC123xyz789
-                `;
-                return;
-            }
             
             try {
                 // Пробуем получить данные через JSON API
@@ -362,8 +348,7 @@
                     3️⃣ Выберите <strong>"Все, у кого есть ссылка"</strong><br>
                     4️⃣ Нажмите <strong>"Готово"</strong><br>
                     5️⃣ <strong>Файл → Опубликовать в интернете</strong> → нажмите "Опубликовать"<br>
-                    6️⃣ Обновите эту страницу через 1 минуту<br><br>
-                    <strong>Текущий ID таблицы:</strong> <code>${SHEET_ID}</code>
+                    6️⃣ Обновите эту страницу через 1 минуту
                 `;
             }
         }

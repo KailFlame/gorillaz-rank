@@ -103,10 +103,173 @@
         // ВАШ ID ТАБЛИЦЫ
         const SHEET_ID = '11G7D8K9N8HqHJ0l6uLzzzbQCeUrG1FmS9trZ5Blp7n4';
         
-        // ПРЯМАЯ ССЫЛКА НА CSV (должна работать после публикации)
-        const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=1778513716`;
+        // Названия листов, которые нужно проверить
+        const SHEET_NAMES = ['SpiderPoints', 'Кта', 'Ава пэпэ', 'Прочее'];
         
-        let players = [];
+        let allPlayers = [];
+        
+        async function loadSheetData(sheetName) {
+            // Сначала пробуем получить JSON с информацией о листах
+            const infoUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+            
+            try {
+                const infoResponse = await fetch(infoUrl);
+                if (infoResponse.ok) {
+                    const text = await infoResponse.text();
+                    const jsonText = text.substring(47, text.length - 2);
+                    const data = JSON.parse(jsonText);
+                    
+                    // Ищем нужный лист
+                    if (data.table && data.table.rows) {
+                        // Парсим данные напрямую
+                        return await parseSheetData(sheetName);
+                    }
+                }
+            } catch (e) {
+                console.log('JSON метод не сработал, пробуем CSV');
+            }
+            
+            // Пробуем через CSV экспорт (без указания gid, просто по имени)
+            const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+            
+            try {
+                const response = await fetch(csvUrl);
+                if (response.ok) {
+                    const csvText = await response.text();
+                    return parseCSV(csvText, sheetName);
+                }
+            } catch (e) {
+                console.log(`Не удалось загрузить ${sheetName}:`, e);
+            }
+            
+            return [];
+        }
+        
+        async function parseSheetData(sheetName) {
+            const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+            
+            try {
+                const response = await fetch(url);
+                if (!response.ok) return [];
+                
+                const text = await response.text();
+                const jsonText = text.substring(47, text.length - 2);
+                const data = JSON.parse(jsonText);
+                
+                if (!data.table || !data.table.rows) return [];
+                
+                const rows = data.table.rows;
+                const cols = data.table.cols;
+                
+                // Ищем колонки с игроком и баллами
+                let nameCol = -1;
+                let scoreCol = -1;
+                
+                for (let i = 0; i < cols.length; i++) {
+                    const label = cols[i].label;
+                    if (label === 'Игрок' || label === 'Ник игрока' || label === '🏆 Игрок') {
+                        nameCol = i;
+                    }
+                    if (label === 'Баллы' || label === '⭐ Баллы') {
+                        scoreCol = i;
+                    }
+                }
+                
+                // Если не нашли по названиям, пробуем по позиции (колонки G и H)
+                if (nameCol === -1 && cols.length > 6 && (cols[6].label === 'Игрок' || cols[6].label === '')) {
+                    nameCol = 6;
+                }
+                if (scoreCol === -1 && cols.length > 7 && (cols[7].label === 'Баллы' || cols[7].label === '')) {
+                    scoreCol = 7;
+                }
+                
+                if (nameCol === -1 || scoreCol === -1) {
+                    console.log(`Не найдены колонки для ${sheetName}`);
+                    return [];
+                }
+                
+                const players = [];
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    if (row.c && row.c[nameCol] && row.c[scoreCol]) {
+                        const name = row.c[nameCol].v;
+                        const score = parseFloat(row.c[scoreCol].v);
+                        
+                        if (name && !isNaN(score) && name !== 'Игрок' && name !== 'Ник игрока') {
+                            players.push({ name: name, score: score, sheet: sheetName });
+                        }
+                    }
+                }
+                
+                console.log(`${sheetName}: найдено ${players.length} игроков`);
+                return players;
+                
+            } catch (e) {
+                console.log(`Ошибка парсинга ${sheetName}:`, e);
+                return [];
+            }
+        }
+        
+        function parseCSV(csvText, sheetName) {
+            const lines = csvText.split('\n');
+            if (lines.length < 2) return [];
+            
+            const players = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                // Простой парсинг CSV
+                const cells = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let j = 0; j < line.length; j++) {
+                    const char = line[j];
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        cells.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                cells.push(current.trim());
+                
+                // Убираем кавычки
+                for (let k = 0; k < cells.length; k++) {
+                    cells[k] = cells[k].replace(/^"|"$/g, '');
+                }
+                
+                // Ищем имя (текст) и баллы (число)
+                let name = null;
+                let score = null;
+                
+                for (let k = 0; k < cells.length; k++) {
+                    const val = cells[k];
+                    if (val && val !== '' && isNaN(parseFloat(val))) {
+                        if (val !== 'Игрок' && val !== 'Ник игрока') {
+                            name = val;
+                        }
+                    }
+                    if (val && val !== '' && !isNaN(parseFloat(val))) {
+                        const num = parseFloat(val);
+                        if (!isNaN(num)) {
+                            score = num;
+                        }
+                    }
+                }
+                
+                if (name && score !== null) {
+                    players.push({ name: name, score: score, sheet: sheetName });
+                }
+            }
+            
+            console.log(`${sheetName} (CSV): найдено ${players.length} игроков`);
+            return players;
+        }
         
         async function loadData() {
             const loading = document.getElementById('loading');
@@ -114,133 +277,56 @@
             const errorMsg = document.getElementById('errorMsg');
             
             loading.style.display = 'block';
-            loading.innerHTML = '🔄 Загрузка...';
+            loading.innerHTML = '🔄 Загрузка данных...';
             table.style.display = 'none';
             errorMsg.style.display = 'none';
             
-            try {
-                // Пробуем загрузить CSV
-                const response = await fetch(CSV_URL);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
-                
-                const text = await response.text();
-                console.log('CSV длина:', text.length);
-                
-                // Разбираем CSV
-                const lines = text.split('\n');
-                if (lines.length < 2) {
-                    throw new Error('Нет данных');
-                }
-                
-                // Ищем данные в колонках G и H (Игрок и Баллы)
-                const playerScores = {};
-                
-                for (let i = 1; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    
-                    // Простой парсинг CSV
-                    const cells = [];
-                    let current = '';
-                    let inQuotes = false;
-                    
-                    for (let j = 0; j < line.length; j++) {
-                        const char = line[j];
-                        if (char === '"') {
-                            inQuotes = !inQuotes;
-                        } else if (char === ',' && !inQuotes) {
-                            cells.push(current.trim());
-                            current = '';
-                        } else {
-                            current += char;
-                        }
-                    }
-                    cells.push(current.trim());
-                    
-                    // Убираем кавычки
-                    for (let k = 0; k < cells.length; k++) {
-                        cells[k] = cells[k].replace(/^"|"$/g, '');
-                    }
-                    
-                    // Ищем колонки (по позиции, так как заголовки могут быть разными)
-                    // Обычно колонка G (индекс 6) — Игрок, колонка H (индекс 7) — Баллы
-                    let name = null;
-                    let score = null;
-                    
-                    // Пробуем найти имя (текст, не число)
-                    for (let k = 0; k < cells.length; k++) {
-                        const val = cells[k];
-                        if (val && val !== '' && isNaN(parseFloat(val))) {
-                            // Это текст — вероятно имя
-                            if (val !== 'Игрок' && val !== 'Ник игрока' && val !== '🏆 Игрок') {
-                                name = val;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    // Пробуем найти баллы (число)
-                    for (let k = 0; k < cells.length; k++) {
-                        const val = cells[k];
-                        if (val && val !== '' && !isNaN(parseFloat(val))) {
-                            const num = parseFloat(val);
-                            if (!isNaN(num)) {
-                                score = num;
-                                break;
-                            }
-                        }
-                    }
-                    
-                    if (name && score !== null && !isNaN(score)) {
-                        if (playerScores[name]) {
-                            playerScores[name] += score;
-                        } else {
-                            playerScores[name] = score;
-                        }
-                    }
-                }
-                
-                // Преобразуем в массив и сортируем
-                players = Object.entries(playerScores).map(([n, s]) => ({ name: n, score: s }));
-                players.sort((a, b) => b.score - a.score);
-                
-                console.log('Найдено игроков:', players.length);
-                
-                if (players.length === 0) {
-                    throw new Error('Не найдено игроков. Проверьте, что в таблице есть данные.');
-                }
-                
-                // Отображаем
-                renderTable();
-                updateStats();
-                
-                loading.style.display = 'none';
-                table.style.display = 'table';
-                
-            } catch (error) {
-                console.error('Ошибка:', error);
+            allPlayers = [];
+            
+            for (const sheetName of SHEET_NAMES) {
+                const players = await loadSheetData(sheetName);
+                allPlayers.push(...players);
+            }
+            
+            if (allPlayers.length === 0) {
                 loading.style.display = 'none';
                 errorMsg.style.display = 'block';
                 errorMsg.innerHTML = `
-                    ❌ Ошибка: ${error.message}<br><br>
+                    ❌ Не удалось загрузить данные.<br><br>
                     <strong>Сделайте следующее:</strong><br><br>
                     1️⃣ Откройте <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit" target="_blank">вашу таблицу</a><br>
                     2️⃣ Нажмите <strong>Файл → Опубликовать в интернете</strong><br>
                     3️⃣ Нажмите <strong>"Опубликовать"</strong><br>
-                    4️⃣ Обновите эту страницу через 1 минуту
+                    4️⃣ Обновите эту страницу через 1 минуту<br><br>
+                    <small>Убедитесь, что на листах есть колонки "Игрок" и "Баллы" (колонки G и H)</small>
                 `;
+                return;
             }
+            
+            // Суммируем баллы по игрокам
+            const playerMap = new Map();
+            for (const p of allPlayers) {
+                playerMap.set(p.name, (playerMap.get(p.name) || 0) + p.score);
+            }
+            
+            const players = Array.from(playerMap.entries()).map(([name, score]) => ({ name, score }));
+            players.sort((a, b) => b.score - a.score);
+            
+            window.currentPlayers = players;
+            
+            renderTable();
+            updateStats(players);
+            
+            loading.style.display = 'none';
+            table.style.display = 'table';
         }
         
         function renderTable() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            let filtered = players;
+            let filtered = window.currentPlayers || [];
             
             if (searchTerm) {
-                filtered = players.filter(p => p.name.toLowerCase().includes(searchTerm));
+                filtered = filtered.filter(p => p.name.toLowerCase().includes(searchTerm));
             }
             
             const tbody = document.getElementById('tableBody');
@@ -262,7 +348,7 @@
             }
         }
         
-        function updateStats() {
+        function updateStats(players) {
             document.getElementById('totalPlayers').innerText = players.length;
             document.getElementById('topScore').innerText = players.length > 0 ? players[0].score : 0;
             const avg = players.length > 0 ? (players.reduce((a,b) => a + b.score, 0) / players.length).toFixed(1) : 0;

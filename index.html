@@ -11,18 +11,71 @@
             box-sizing: border-box;
         }
 
+        /* Анимация пульсации для фона */
+        @keyframes pulse {
+            0% { opacity: 0.4; }
+            50% { opacity: 0.7; }
+            100% { opacity: 0.4; }
+        }
+
+        /* Анимация свечения для карточек */
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px rgba(102, 126, 234, 0.5); }
+            100% { box-shadow: 0 0 20px rgba(102, 126, 234, 0.8); }
+        }
+
+        /* Анимация появления строк таблицы */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             min-height: 100vh;
             padding: 20px;
+            position: relative;
+            background: linear-gradient(135deg, #0a0a2a, #1a1a3a, #0f0f2f);
+            overflow-x: hidden;
+        }
+
+        /* Анимированные частицы фона */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            animation: float linear infinite;
+        }
+
+        @keyframes float {
+            from { transform: translateY(100vh) rotate(0deg); }
+            to { transform: translateY(-100vh) rotate(360deg); }
         }
 
         .container {
             max-width: 1400px;
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
 
+        /* Заголовок с неоновым эффектом */
         .header {
             text-align: center;
             margin-bottom: 40px;
@@ -32,36 +85,51 @@
         .header h1 {
             font-size: 3rem;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 0 0 10px #667eea, 0 0 20px #667eea, 0 0 30px #667eea;
+            animation: pulse 2s infinite;
+            letter-spacing: 3px;
         }
 
         .header p {
             font-size: 1.1rem;
             opacity: 0.85;
+            color: #ccc;
         }
 
+        /* Поиск с неоновой рамкой */
         .controls {
-            background: rgba(255,255,255,0.95);
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 20px;
             margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            transition: all 0.3s;
+        }
+
+        .controls:hover {
+            border-color: #667eea;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
         }
 
         .search-box input {
             width: 100%;
             padding: 14px 20px;
             font-size: 16px;
-            border: 2px solid #e0e0e0;
+            border: none;
             border-radius: 30px;
             transition: all 0.3s;
+            background: rgba(255,255,255,0.9);
         }
 
         .search-box input:focus {
             outline: none;
-            border-color: #667eea;
+            box-shadow: 0 0 15px #667eea;
+            transform: scale(1.01);
         }
 
+        /* Статистика — карточки с эффектом стекла */
         .stats {
             display: flex;
             gap: 20px;
@@ -70,13 +138,22 @@
         }
 
         .stat-card {
-            background: rgba(255,255,255,0.95);
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 20px;
             flex: 1;
             min-width: 140px;
             text-align: center;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: #667eea;
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.2);
         }
 
         .stat-card h3 {
@@ -88,15 +165,18 @@
         }
 
         .stat-card p {
-            color: #666;
+            color: #ccc;
             margin-top: 5px;
         }
 
+        /* Таблица с эффектом стекла */
         .table-container {
-            background: rgba(255,255,255,0.95);
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
             border-radius: 20px;
             overflow-x: auto;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 1px solid rgba(102, 126, 234, 0.3);
         }
 
         table {
@@ -114,25 +194,40 @@
 
         td {
             padding: 12px 15px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            color: #eee;
+            animation: fadeInUp 0.5s ease-out forwards;
+            opacity: 0;
         }
+
+        /* Анимация строк с задержкой */
+        tr:nth-child(1) td { animation-delay: 0.05s; }
+        tr:nth-child(2) td { animation-delay: 0.1s; }
+        tr:nth-child(3) td { animation-delay: 0.15s; }
+        tr:nth-child(4) td { animation-delay: 0.2s; }
+        tr:nth-child(5) td { animation-delay: 0.25s; }
+        tr:nth-child(6) td { animation-delay: 0.3s; }
+        tr:nth-child(7) td { animation-delay: 0.35s; }
+        tr:nth-child(8) td { animation-delay: 0.4s; }
+        tr:nth-child(9) td { animation-delay: 0.45s; }
+        tr:nth-child(10) td { animation-delay: 0.5s; }
 
         tr:hover {
-            background: #f8f9ff;
+            background: rgba(102, 126, 234, 0.2);
         }
 
+        /* Ранги с неоновыми цветами */
         .rank-1 {
             background: linear-gradient(135deg, #ffd700, #ffb700);
             color: #333;
             font-weight: bold;
+            text-shadow: 0 0 5px rgba(255,215,0,0.5);
         }
-
         .rank-2 {
             background: linear-gradient(135deg, #c0c0c0, #a8a8a8);
             color: #333;
             font-weight: bold;
         }
-
         .rank-3 {
             background: linear-gradient(135deg, #cd7f32, #b86b2a);
             color: white;
@@ -153,25 +248,26 @@
         .footer {
             text-align: center;
             margin-top: 30px;
-            color: white;
+            color: #aaa;
             opacity: 0.7;
             font-size: 0.85rem;
         }
 
         button {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
+            padding: 10px 25px;
+            border-radius: 30px;
             cursor: pointer;
             margin-top: 10px;
             transition: all 0.3s;
+            font-weight: bold;
         }
 
         button:hover {
-            background: #5a67d8;
             transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
         }
 
         @media (max-width: 768px) {
@@ -181,6 +277,9 @@
     </style>
 </head>
 <body>
+    <!-- Анимированные частицы фона -->
+    <div class="particles" id="particles"></div>
+
     <div class="container">
         <div class="header">
             <h1>🎮 GORILLAZ — Рейтинг гильдии</h1>
@@ -222,14 +321,36 @@
     </div>
 
     <script>
-        // ⚠️ ТВОЙ ID ТАБЛИЦЫ (из адресной строки)
+        // ============================================
+        // ПАРАМЕТРЫ (ЗАМЕНИ НА СВОИ)
+        // ============================================
         const SHEET_ID = '1S1RiKUiEcYbcax5nhWeA13_GNgh_6hstL1ebZhx6o1k';
+        const NAME_COL = 0;
+        const ADD_COL = 1;
+        const SUBTRACT_COL = 2;
         
-        // ПРАВИЛЬНЫЕ ИНДЕКСЫ КОЛОНОК (из твоих заголовков)
-        // "🏆 Игрок" — индекс 6, "⭐ Баллы" — индекс 7
-        const NAME_COL = 6;
-        const SCORE_COL = 7;
+        // ============================================
+        // СОЗДАНИЕ ЧАСТИЦ
+        // ============================================
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                const size = Math.random() * 5 + 2;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDuration = Math.random() * 10 + 5 + 's';
+                particle.style.animationDelay = Math.random() * 5 + 's';
+                particle.style.opacity = Math.random() * 0.5;
+                container.appendChild(particle);
+            }
+        }
         
+        // ============================================
+        // ОСНОВНАЯ ЛОГИКА
+        // ============================================
         let players = [];
         
         async function loadData() {
@@ -244,30 +365,20 @@
             
             try {
                 const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
-                console.log('Запрос:', url);
-                
                 const response = await fetch(url);
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 
                 const csvText = await response.text();
-                console.log('Получено символов:', csvText.length);
                 
                 if (csvText.includes('<!DOCTYPE') || csvText.includes('/*O_o*/')) {
                     throw new Error('Таблица не опубликована публично');
                 }
                 
                 const lines = csvText.split('\n');
-                if (lines.length < 2) {
-                    throw new Error('Нет данных');
-                }
+                if (lines.length < 2) throw new Error('Нет данных');
                 
                 const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
-                console.log('Заголовки:', headers);
-                console.log(`Колонка имён: ${NAME_COL} (${headers[NAME_COL]})`);
-                console.log(`Колонка баллов: ${SCORE_COL} (${headers[SCORE_COL]})`);
                 
                 const playerScores = {};
                 
@@ -275,7 +386,6 @@
                     const line = lines[i].trim();
                     if (!line) continue;
                     
-                    // Парсим CSV строку
                     const cells = [];
                     let current = '';
                     let inQuotes = false;
@@ -294,17 +404,16 @@
                     cells.push(current.replace(/^"|"$/g, '').trim());
                     
                     const name = cells[NAME_COL];
-                    const score = parseFloat(cells[SCORE_COL]);
+                    const add = parseFloat(cells[ADD_COL]);
+                    const subtract = parseFloat(cells[SUBTRACT_COL]);
                     
-                    if (name && name !== '' && !isNaN(score)) {
-                        // Пропускаем строку с заголовками
-                        if (name === headers[NAME_COL]) continue;
-                        if (name === '🏆 Игрок') continue;
+                    if (name && name !== '' && name !== headers[NAME_COL] && name !== 'Ник игрока') {
+                        let change = 0;
+                        if (!isNaN(add)) change += add;
+                        if (!isNaN(subtract)) change -= subtract;
                         
-                        if (playerScores[name]) {
-                            playerScores[name] += score;
-                        } else {
-                            playerScores[name] = score;
+                        if (change !== 0) {
+                            playerScores[name] = (playerScores[name] || 0) + change;
                         }
                     }
                 }
@@ -312,10 +421,8 @@
                 players = Object.entries(playerScores).map(([n, s]) => ({ name: n, score: s }));
                 players.sort((a, b) => b.score - a.score);
                 
-                console.log('Найдено игроков:', players.length);
-                
                 if (players.length === 0) {
-                    throw new Error('Нет данных. Проверьте, что в колонках есть имена и баллы');
+                    throw new Error('Нет данных');
                 }
                 
                 renderTable();
@@ -329,19 +436,7 @@
                 console.error('Ошибка:', error);
                 loading.style.display = 'none';
                 errorMsg.style.display = 'block';
-                errorMsg.innerHTML = `
-                    ❌ Ошибка: ${error.message}<br><br>
-                    <strong>Сделайте следующее:</strong><br><br>
-                    1️⃣ Откройте <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit" target="_blank">вашу таблицу</a><br>
-                    2️⃣ Нажмите <strong>синюю кнопку "Настройки доступа"</strong><br>
-                    3️⃣ Выберите <strong>"Все, у кого есть ссылка"</strong><br>
-                    4️⃣ Нажмите <strong>"Готово"</strong><br>
-                    5️⃣ <strong>Файл → Опубликовать в интернете</strong><br>
-                    6️⃣ Выберите <strong>"Вся таблица"</strong><br>
-                    7️⃣ Выберите формат <strong>"Значения, разделенные запятыми (.csv)"</strong><br>
-                    8️⃣ Нажмите <strong>"Опубликовать"</strong><br>
-                    9️⃣ Обновите эту страницу через 1 минуту
-                `;
+                errorMsg.innerHTML = `❌ Ошибка: ${error.message}<br><br>Проверьте публикацию таблицы`;
             }
         }
         
@@ -383,6 +478,7 @@
         
         document.getElementById('searchInput').addEventListener('input', () => renderTable());
         
+        createParticles();
         loadData();
         setInterval(loadData, 60000);
     </script>

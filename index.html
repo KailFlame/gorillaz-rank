@@ -223,7 +223,8 @@
 
     <script>
         // ⚠️ ВСТАВЬ СВОЙ ПРАВИЛЬНЫЙ ID ТАБЛИЦЫ (из адресной строки)
-        const SHEET_ID = '1lG7D8K9N8HqHJol6uLzzzbQCeUrG1FmS9trZSBlp7n4';
+        // Пример: const SHEET_ID = '1ABC123xyz789';
+        const SHEET_ID = 'ВСТАВЬ_СВОЙ_ID_СЮДА';
         
         let players = [];
         
@@ -237,78 +238,92 @@
             table.style.display = 'none';
             errorMsg.style.display = 'none';
             
+            // Проверяем, что ID не пустой и не пример
+            if (SHEET_ID === '1lG7D8K9N8HqHJol6uLzzzbQCeUrG1FmS9trZSBlp7n4' || SHEET_ID === '') {
+                loading.style.display = 'none';
+                errorMsg.style.display = 'block';
+                errorMsg.innerHTML = `
+                    ❌ <strong>ID таблицы не настроен!</strong><br><br>
+                    <strong>Сделайте следующее:</strong><br><br>
+                    1️⃣ Откройте <strong>вашу Google Таблицу</strong> в браузере<br>
+                    2️⃣ Скопируйте ID из адресной строки (длинный текст между /d/ и /edit)<br>
+                    3️⃣ Вставьте ID в код вместо <strong>ВСТАВЬ_СВОЙ_ID_СЮДА</strong><br>
+                    4️⃣ Загрузите сайт заново на Vercel<br><br>
+                    <strong>Пример ID:</strong> 1ABC123xyz789
+                `;
+                return;
+            }
+            
             try {
-                // Используем CSV формат (работает надёжнее)
-                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
+                // Пробуем получить данные через JSON API
+                const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
                 console.log('Запрос:', url);
                 
                 const response = await fetch(url);
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                    throw new Error(`HTTP ${response.status} — таблица не найдена`);
                 }
                 
-                const csvText = await response.text();
-                console.log('Получено символов:', csvText.length);
+                const text = await response.text();
+                console.log('Получено символов:', text.length);
                 
-                // Проверяем, не вернулся ли HTML вместо CSV
-                if (csvText.includes('<!DOCTYPE') || csvText.includes('/*O_o*/')) {
+                // Проверяем, не вернулась ли ошибка
+                if (text.includes('/*O_o*/')) {
                     throw new Error('Таблица не опубликована публично');
                 }
                 
-                // Парсим CSV
-                const lines = csvText.split('\n');
-                if (lines.length < 2) {
-                    throw new Error('Нет данных');
+                // Убираем префикс Google
+                let jsonText = text;
+                if (text.startsWith('google.visualization.Query.setResponse(')) {
+                    jsonText = text.substring(47, text.length - 2);
                 }
                 
-                // Получаем заголовки
-                const headers = lines[0].split(',').map(h => h.replace(/^"|"$/g, '').trim());
-                console.log('Заголовки:', headers);
+                const data = JSON.parse(jsonText);
+                
+                if (!data.table || !data.table.rows) {
+                    throw new Error('Нет данных в таблице');
+                }
+                
+                const cols = data.table.cols;
+                console.log('Колонки:', cols.map(c => c.label));
                 
                 // Ищем колонки "Игрок" и "Баллы"
                 let nameCol = -1, scoreCol = -1;
-                for (let i = 0; i < headers.length; i++) {
-                    const h = headers[i];
-                    if (h === 'Игрок' || h === 'Ник игрока' || h === '🏆 Игрок') nameCol = i;
-                    if (h === 'Баллы' || h === '⭐ Баллы') scoreCol = i;
+                for (let i = 0; i < cols.length; i++) {
+                    const label = cols[i].label;
+                    if (label === 'Игрок' || label === 'Ник игрока' || label === '🏆 Игрок') nameCol = i;
+                    if (label === 'Баллы' || label === '⭐ Баллы') scoreCol = i;
                 }
                 
-                // Если не нашли, пробуем по позиции (G и H = индексы 6 и 7)
-                if (nameCol === -1 && headers.length > 6 && headers[6] === 'Игрок') nameCol = 6;
-                if (scoreCol === -1 && headers.length > 7 && headers[7] === 'Баллы') scoreCol = 7;
+                // Если не нашли, берём первую текстовую и первую числовую колонки
+                if (nameCol === -1) {
+                    for (let i = 0; i < cols.length; i++) {
+                        if (cols[i].type === 'string') {
+                            nameCol = i;
+                            break;
+                        }
+                    }
+                }
+                if (scoreCol === -1) {
+                    for (let i = 0; i < cols.length; i++) {
+                        if (cols[i].type === 'number') {
+                            scoreCol = i;
+                            break;
+                        }
+                    }
+                }
                 
                 if (nameCol === -1 || scoreCol === -1) {
-                    throw new Error(`Не найдены колонки. Доступные: ${headers.join(', ')}`);
+                    throw new Error(`Не найдены колонки. Доступные: ${cols.map(c => c.label || c.type).join(', ')}`);
                 }
                 
                 // Собираем данные
                 const playerScores = {};
-                
-                for (let i = 1; i < lines.length; i++) {
-                    const line = lines[i].trim();
-                    if (!line) continue;
-                    
-                    // Парсим CSV строку
-                    const cells = [];
-                    let current = '';
-                    let inQuotes = false;
-                    
-                    for (let j = 0; j < line.length; j++) {
-                        const char = line[j];
-                        if (char === '"') {
-                            inQuotes = !inQuotes;
-                        } else if (char === ',' && !inQuotes) {
-                            cells.push(current.replace(/^"|"$/g, '').trim());
-                            current = '';
-                        } else {
-                            current += char;
-                        }
-                    }
-                    cells.push(current.replace(/^"|"$/g, '').trim());
-                    
-                    const name = cells[nameCol];
-                    const score = parseFloat(cells[scoreCol]);
+                for (const row of data.table.rows) {
+                    if (!row.c) continue;
+                    const name = row.c[nameCol]?.v;
+                    const score = parseFloat(row.c[scoreCol]?.v);
                     
                     if (name && !isNaN(score) && name !== 'Игрок' && name !== 'Ник игрока') {
                         if (playerScores[name]) {
@@ -340,14 +355,15 @@
                 loading.style.display = 'none';
                 errorMsg.style.display = 'block';
                 errorMsg.innerHTML = `
-                    ❌ Ошибка: ${error.message}<br><br>
+                    ❌ <strong>Ошибка:</strong> ${error.message}<br><br>
                     <strong>Сделайте следующее:</strong><br><br>
                     1️⃣ Откройте <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit" target="_blank">вашу таблицу</a><br>
                     2️⃣ Нажмите <strong>синюю кнопку "Настройки доступа"</strong><br>
                     3️⃣ Выберите <strong>"Все, у кого есть ссылка"</strong><br>
                     4️⃣ Нажмите <strong>"Готово"</strong><br>
                     5️⃣ <strong>Файл → Опубликовать в интернете</strong> → нажмите "Опубликовать"<br>
-                    6️⃣ Обновите эту страницу через 1 минуту
+                    6️⃣ Обновите эту страницу через 1 минуту<br><br>
+                    <strong>Текущий ID таблицы:</strong> <code>${SHEET_ID}</code>
                 `;
             }
         }
@@ -390,11 +406,7 @@
         
         document.getElementById('searchInput').addEventListener('input', () => renderTable());
         
-        // Загружаем данные при старте
         loadData();
-        
-        // Автообновление каждые 60 секунд
-        setInterval(loadData, 60000);
     </script>
 </body>
 </html>

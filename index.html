@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             min-height: 100vh;
             padding: 20px;
         }
@@ -23,7 +23,6 @@
             margin: 0 auto;
         }
 
-        /* Header */
         .header {
             text-align: center;
             margin-bottom: 40px;
@@ -33,72 +32,57 @@
         .header h1 {
             font-size: 3rem;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
         .header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
+            font-size: 1.1rem;
+            opacity: 0.85;
         }
 
-        /* Search & Filters */
         .controls {
-            background: white;
-            border-radius: 15px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
             padding: 20px;
             margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .search-box {
-            margin-bottom: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
 
         .search-box input {
             width: 100%;
-            padding: 12px 20px;
+            padding: 14px 20px;
             font-size: 16px;
             border: 2px solid #e0e0e0;
-            border-radius: 25px;
+            border-radius: 30px;
             transition: all 0.3s;
         }
 
         .search-box input:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
         }
 
         .filter-buttons {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
+            margin-top: 15px;
         }
 
         .filter-btn {
-            padding: 8px 16px;
+            padding: 10px 20px;
             border: none;
-            border-radius: 20px;
+            border-radius: 30px;
             cursor: pointer;
+            background: #f0f0f0;
             transition: all 0.3s;
-            font-size: 14px;
         }
 
         .filter-btn.active {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
         }
 
-        .filter-btn:not(.active) {
-            background: #f0f0f0;
-            color: #333;
-        }
-
-        .filter-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        /* Stats */
         .stats {
             display: flex;
             gap: 20px;
@@ -107,177 +91,170 @@
         }
 
         .stat-card {
-            background: white;
-            border-radius: 15px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
             padding: 20px;
             flex: 1;
-            min-width: 150px;
+            min-width: 140px;
             text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         .stat-card h3 {
-            font-size: 2rem;
-            color: #667eea;
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
         }
 
-        .stat-card p {
-            color: #666;
-            margin-top: 5px;
-        }
-
-        /* Table */
         .table-container {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            overflow-x: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 500px;
         }
 
         th {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             padding: 15px;
-            text-align: left;
             cursor: pointer;
-            user-select: none;
-        }
-
-        th:hover {
-            background: #5a67d8;
         }
 
         td {
             padding: 12px 15px;
-            border-bottom: 1px solid #e0e0e0;
+            border-bottom: 1px solid #eee;
         }
 
         tr:hover {
-            background: #f8f9fa;
+            background: #f8f9ff;
         }
 
-        /* Ранги */
-        .rank-1 {
-            background: linear-gradient(135deg, #ffd700, #ffb700);
-            color: #333;
-            font-weight: bold;
-        }
+        .rank-1 { background: linear-gradient(135deg, #ffd700, #ffb700); color: #333; font-weight: bold; }
+        .rank-2 { background: linear-gradient(135deg, #c0c0c0, #a8a8a8); color: #333; font-weight: bold; }
+        .rank-3 { background: linear-gradient(135deg, #cd7f32, #b86b2a); color: white; font-weight: bold; }
 
-        .rank-2 {
-            background: linear-gradient(135deg, #c0c0c0, #a8a8a8);
-            color: #333;
-            font-weight: bold;
-        }
-
-        .rank-3 {
-            background: linear-gradient(135deg, #cd7f32, #b86b2a);
-            color: white;
-            font-weight: bold;
-        }
-
-        /* Loading */
-        .loading {
+        .loading, .error {
             text-align: center;
             padding: 50px;
             color: white;
             font-size: 1.2rem;
         }
 
-        /* Footer */
+        .error {
+            color: #ff6b6b;
+        }
+
         .footer {
             text-align: center;
             margin-top: 30px;
             color: white;
-            opacity: 0.8;
-            font-size: 0.9rem;
+            opacity: 0.7;
+            font-size: 0.85rem;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 10px;
         }
 
         @media (max-width: 768px) {
-            .header h1 { font-size: 2rem; }
-            th, td { padding: 8px 10px; font-size: 12px; }
+            .header h1 { font-size: 1.8rem; }
+            th, td { padding: 8px; font-size: 12px; }
+            .filter-btn { padding: 6px 12px; font-size: 12px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎮 Gorillaz — Рейтинг гильдии</h1>
-            <p>Система подсчёта баллов • Обновляется автоматически</p>
+            <h1>🎮 GORILLAZ — Рейтинг гильдии</h1>
+            <p>Система подсчёта баллов</p>
         </div>
 
         <div class="controls">
             <div class="search-box">
                 <input type="text" id="searchInput" placeholder="🔍 Поиск игрока...">
             </div>
-            <div class="filter-buttons">
-                <button class="filter-btn active" data-sheet="all">📊 Все активности</button>
-                <button class="filter-btn" data-sheet="SpiderPoints">🕷️ SpiderPoints</button>
-                <button class="filter-btn" data-sheet="Кта">⚔️ Кта</button>
-                <button class="filter-btn" data-sheet="Ава пэпэ">👾 Ава пэпэ</button>
-                <button class="filter-btn" data-sheet="Прочее">📋 Прочее</button>
-            </div>
+            <div class="filter-buttons" id="filterButtons"></div>
         </div>
 
         <div class="stats" id="stats">
-            <div class="stat-card">
-                <h3 id="totalPlayers">0</h3>
-                <p>Всего игроков</p>
-            </div>
-            <div class="stat-card">
-                <h3 id="topScore">0</h3>
-                <p>Максимум баллов</p>
-            </div>
-            <div class="stat-card">
-                <h3 id="avgScore">0</h3>
-                <p>Средний балл</p>
-            </div>
+            <div class="stat-card"><h3 id="totalPlayers">—</h3><p>Всего игроков</p></div>
+            <div class="stat-card"><h3 id="topScore">—</h3><p>Максимум баллов</p></div>
+            <div class="stat-card"><h3 id="avgScore">—</h3><p>Средний балл</p></div>
         </div>
 
         <div class="table-container">
             <div id="loading" class="loading">🔄 Загрузка данных...</div>
+            <div id="errorMessage" class="error" style="display:none;"></div>
             <table id="ratingTable" style="display: none;">
                 <thead>
-                    <tr>
-                        <th onclick="sortTable('rank')">🏆 Место</th>
-                        <th onclick="sortTable('player')">👤 Игрок</th>
-                        <th onclick="sortTable('score')">⭐ Баллы</th>
-                        <th onclick="sortTable('activity')">📊 Активность</th>
-                    </tr>
+                    <tr><th>🏆 Место</th><th>👤 Игрок</th><th>⭐ Баллы</th><th>📊 Активность</th></tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
 
         <div class="footer">
-            📅 Данные обновляются автоматически • Последнее обновление: <span id="updateTime">-</span>
+            📅 Последнее обновление: <span id="updateTime">—</span>
+            <br>
+            <button onclick="loadData()">🔄 Обновить вручную</button>
         </div>
     </div>
 
     <script>
         // ==================== НАСТРОЙКИ ====================
-        // ВСТАВЬ СВОЙ ID ТАБЛИЦЫ:
-        const SPREADSHEET_ID = 1lG7D8K9N8HqHJol6uLzzzbQCeUrG1FmS9trZSBlp7n4;
+        // ⚠️ ВСТАВЬ СВОЙ ID ТАБЛИЦЫ:
+        const SPREADSHEET_ID = '1VH6xG8KpLmQ9rN2sT3uV4wX5yZ6aB7cD8eF9gH0iJ1kL';
         
-        // Листы для отображения
         const SHEETS = ['SpiderPoints', 'Кта', 'Ава пэпэ', 'Прочее'];
         
-        // ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ====================
+        // ==================== ПЕРЕМЕННЫЕ ====================
         let allData = [];
         let currentSheet = 'all';
-        let sortColumn = 'score';
-        let sortDirection = 'desc';
+        let isLoading = false;
+        let loadTimeout = null;
+        
+        // ==================== ЗАГРУЗКА С ТАЙМАУТОМ ====================
+        async function fetchWithTimeout(url, timeout = 15000) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), timeout);
+            
+            try {
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                return response;
+            } catch (error) {
+                clearTimeout(timeoutId);
+                throw error;
+            }
+        }
         
         // ==================== ЗАГРУЗКА ДАННЫХ ====================
         async function loadData() {
+            if (isLoading) return;
+            isLoading = true;
+            
             const loadingEl = document.getElementById('loading');
             const tableEl = document.getElementById('ratingTable');
+            const errorEl = document.getElementById('errorMessage');
+            
             loadingEl.style.display = 'block';
+            loadingEl.innerHTML = '🔄 Загрузка данных...';
             tableEl.style.display = 'none';
+            errorEl.style.display = 'none';
             
             allData = [];
             
@@ -285,7 +262,10 @@
                 for (const sheetName of SHEETS) {
                     try {
                         const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-                        const response = await fetch(url);
+                        const response = await fetchWithTimeout(url, 10000);
+                        
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                        
                         const text = await response.text();
                         const jsonText = text.substring(47, text.length - 2);
                         const data = JSON.parse(jsonText);
@@ -294,10 +274,7 @@
                             const rows = data.table.rows;
                             const cols = data.table.cols;
                             
-                            // Ищем колонки с ником и баллами
-                            let nameCol = -1;
-                            let scoreCol = -1;
-                            
+                            let nameCol = -1, scoreCol = -1;
                             for (let i = 0; i < cols.length; i++) {
                                 const label = cols[i].label;
                                 if (label === '🏆 Игрок' || label === 'Игрок') nameCol = i;
@@ -310,7 +287,6 @@
                                     if (row.c && row.c[nameCol] && row.c[scoreCol]) {
                                         const playerName = row.c[nameCol].v;
                                         let score = row.c[scoreCol].v;
-                                        
                                         if (playerName && playerName !== '🏆 Игрок' && playerName !== 'Игрок') {
                                             allData.push({
                                                 player: playerName,
@@ -323,141 +299,127 @@
                             }
                         }
                     } catch (e) {
-                        console.warn(`Ошибка загрузки листа ${sheetName}:`, e);
+                        console.warn(`Ошибка листа ${sheetName}:`, e);
                     }
                 }
                 
-                // Сортируем данные
-                sortData();
+                if (allData.length === 0) {
+                    throw new Error('Нет данных. Проверьте публикацию таблицы.');
+                }
                 
-                // Обновляем статистику
-                updateStats();
-                
-                // Отображаем таблицу
+                renderFilters();
                 renderTable();
+                updateStats();
                 
                 loadingEl.style.display = 'none';
                 tableEl.style.display = 'table';
                 document.getElementById('updateTime').innerText = new Date().toLocaleString();
                 
             } catch (error) {
-                console.error('Ошибка загрузки:', error);
-                loadingEl.innerHTML = '❌ Ошибка загрузки данных. Проверьте, что таблица опубликована.';
+                console.error('Ошибка:', error);
+                loadingEl.style.display = 'none';
+                errorEl.style.display = 'block';
+                errorEl.innerHTML = '❌ Ошибка загрузки данных. Проверьте, что таблица опубликована.<br><br>' + error.message;
+            } finally {
+                isLoading = false;
             }
         }
         
-        // ==================== СОРТИРОВКА ====================
-        function sortData() {
-            let filteredData = [...allData];
+        // ==================== ФИЛЬТРЫ ====================
+        function renderFilters() {
+            const sheets = [...new Set(allData.map(d => d.activity))];
+            const container = document.getElementById('filterButtons');
+            container.innerHTML = '<button class="filter-btn active" data-sheet="all">📊 Все активности</button>';
             
-            // Фильтр по активности
-            if (currentSheet !== 'all') {
-                filteredData = filteredData.filter(d => d.activity === currentSheet);
-            }
-            
-            // Сортировка
-            filteredData.sort((a, b) => {
-                if (sortColumn === 'player') {
-                    const compare = a.player.localeCompare(b.player);
-                    return sortDirection === 'asc' ? compare : -compare;
-                } else {
-                    const compare = a.score - b.score;
-                    return sortDirection === 'asc' ? compare : -compare;
-                }
+            sheets.forEach(sheet => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn';
+                btn.dataset.sheet = sheet;
+                btn.innerHTML = getActivityIcon(sheet) + ' ' + sheet;
+                btn.onclick = () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentSheet = sheet;
+                    renderTable();
+                    updateStats();
+                };
+                container.appendChild(btn);
             });
-            
-            return filteredData;
         }
         
-        // ==================== ОБНОВЛЕНИЕ СТАТИСТИКИ ====================
-        function updateStats() {
-            const filtered = allData.filter(d => currentSheet === 'all' || d.activity === currentSheet);
-            const uniquePlayers = [...new Set(filtered.map(d => d.player))];
-            const scores = filtered.map(d => d.score);
-            const maxScore = Math.max(...scores, 0);
-            const avgScore = scores.length ? (scores.reduce((a,b) => a + b, 0) / uniquePlayers.length).toFixed(1) : 0;
-            
-            document.getElementById('totalPlayers').innerText = uniquePlayers.length;
-            document.getElementById('topScore').innerText = maxScore;
-            document.getElementById('avgScore').innerText = avgScore;
-        }
-        
-        // ==================== ОТРИСОВКА ТАБЛИЦЫ ====================
+        // ==================== РЕЙТИНГ ====================
         function renderTable() {
-            const filtered = sortData();
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            let filtered = [...allData];
+            if (currentSheet !== 'all') {
+                filtered = filtered.filter(d => d.activity === currentSheet);
+            }
             
-            // Фильтр по поиску
-            let displayed = filtered;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             if (searchTerm) {
-                displayed = filtered.filter(d => d.player.toLowerCase().includes(searchTerm));
+                filtered = filtered.filter(d => d.player.toLowerCase().includes(searchTerm));
             }
             
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
             
-            // Группируем по игрокам (суммируем баллы по разным активностям, если выбран "все")
-            let playerMap = new Map();
-            
             if (currentSheet === 'all') {
-                for (const item of displayed) {
-                    if (playerMap.has(item.player)) {
-                        playerMap.set(item.player, playerMap.get(item.player) + item.score);
-                    } else {
-                        playerMap.set(item.player, item.score);
-                    }
+                const playerMap = new Map();
+                for (const item of filtered) {
+                    playerMap.set(item.player, (playerMap.get(item.player) || 0) + item.score);
                 }
-                
-                // Конвертируем в массив для сортировки
-                let aggregated = Array.from(playerMap.entries()).map(([player, score]) => ({ player, score, activity: 'Все' }));
+                let aggregated = Array.from(playerMap.entries()).map(([player, score]) => ({ player, score }));
                 aggregated.sort((a, b) => b.score - a.score);
                 
-                // Отрисовка
                 for (let i = 0; i < aggregated.length; i++) {
                     const item = aggregated[i];
-                    const rank = i + 1;
                     const row = tbody.insertRow();
-                    
                     let rankClass = '';
-                    if (rank === 1) rankClass = 'rank-1';
-                    else if (rank === 2) rankClass = 'rank-2';
-                    else if (rank === 3) rankClass = 'rank-3';
-                    
+                    if (i === 0) rankClass = 'rank-1';
+                    else if (i === 1) rankClass = 'rank-2';
+                    else if (i === 2) rankClass = 'rank-3';
                     row.innerHTML = `
-                        <td class="${rankClass}" style="font-weight: bold;">${rank}</td>
+                        <td class="${rankClass}" style="text-align:center; font-weight:bold;">${i+1}</td>
                         <td>${escapeHtml(item.player)}</td>
-                        <td style="font-weight: bold; color: #667eea;">${item.score}</td>
+                        <td style="font-weight:bold; color:#667eea;">${item.score}</td>
                         <td>📊 Все активности</td>
                     `;
                 }
             } else {
-                for (let i = 0; i < displayed.length; i++) {
-                    const item = displayed[i];
-                    const rank = i + 1;
+                filtered.sort((a, b) => b.score - a.score);
+                for (let i = 0; i < filtered.length; i++) {
+                    const item = filtered[i];
                     const row = tbody.insertRow();
-                    
                     let rankClass = '';
-                    if (rank === 1) rankClass = 'rank-1';
-                    else if (rank === 2) rankClass = 'rank-2';
-                    else if (rank === 3) rankClass = 'rank-3';
-                    
+                    if (i === 0) rankClass = 'rank-1';
+                    else if (i === 1) rankClass = 'rank-2';
+                    else if (i === 2) rankClass = 'rank-3';
                     row.innerHTML = `
-                        <td class="${rankClass}" style="font-weight: bold;">${rank}</td>
+                        <td class="${rankClass}" style="text-align:center; font-weight:bold;">${i+1}</td>
                         <td>${escapeHtml(item.player)}</td>
-                        <td style="font-weight: bold; color: #667eea;">${item.score}</td>
+                        <td style="font-weight:bold; color:#667eea;">${item.score}</td>
                         <td>${getActivityIcon(item.activity)} ${item.activity}</td>
                     `;
                 }
             }
         }
         
+        function updateStats() {
+            let filtered = [...allData];
+            if (currentSheet !== 'all') {
+                filtered = filtered.filter(d => d.activity === currentSheet);
+            }
+            const uniquePlayers = [...new Set(filtered.map(d => d.player))];
+            const scores = filtered.map(d => d.score);
+            const maxScore = Math.max(...scores, 0);
+            const avgScore = uniquePlayers.length ? (scores.reduce((a,b) => a + b, 0) / uniquePlayers.length).toFixed(1) : 0;
+            
+            document.getElementById('totalPlayers').innerText = uniquePlayers.length;
+            document.getElementById('topScore').innerText = maxScore;
+            document.getElementById('avgScore').innerText = avgScore;
+        }
+        
         function getActivityIcon(activity) {
-            const icons = {
-                'SpiderPoints': '🕷️',
-                'Кта': '⚔️',
-                'Ава пэпэ': '👾',
-                'Прочее': '📋'
-            };
+            const icons = { 'SpiderPoints': '🕷️', 'Кта': '⚔️', 'Ава пэпэ': '👾', 'Прочее': '📋' };
             return icons[activity] || '📊';
         }
         
@@ -467,38 +429,12 @@
             return div.innerHTML;
         }
         
-        // ==================== СОРТИРОВКА ПО КОЛОНКАМ ====================
-        function sortTable(column) {
-            if (sortColumn === column) {
-                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-            } else {
-                sortColumn = column;
-                sortDirection = column === 'score' ? 'desc' : 'asc';
-            }
-            renderTable();
-        }
+        document.getElementById('searchInput').addEventListener('input', () => renderTable());
         
-        // ==================== ОБРАБОТЧИКИ СОБЫТИЙ ====================
-        document.getElementById('searchInput').addEventListener('input', () => {
-            renderTable();
-        });
+        // Автообновление каждые 30 секунд (но не чаще)
+        setInterval(() => { loadData(); }, 30000);
         
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentSheet = btn.dataset.sheet;
-                sortData();
-                updateStats();
-                renderTable();
-            });
-        });
-        
-        // ==================== ЗАПУСК ====================
         loadData();
-        
-        // Автообновление каждые 5 минут
-        setInterval(loadData, 300000);
     </script>
 </body>
 </html>

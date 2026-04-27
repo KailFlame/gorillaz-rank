@@ -7,43 +7,31 @@
     
     <!-- ИКОНКА САЙТА (FAVICON) -->
     <link rel="icon" type="image/png" href="https://emojicdn.elk.sh/🎮">
-    <!-- Альтернативный вариант с эмодзи-иконкой -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.35em' font-size='80'%3E🎮%3C/text%3E%3C/svg%3E">
     
     <style>
-        /* Весь твой CSS остаётся без изменений */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        /* Анимация пульсации для фона */
         @keyframes pulse {
             0% { opacity: 0.4; text-shadow: 0 0 5px #667eea; }
             50% { opacity: 0.7; text-shadow: 0 0 20px #667eea, 0 0 30px #764ba2; }
             100% { opacity: 0.4; text-shadow: 0 0 5px #667eea; }
         }
 
-        /* Анимация свечения для карточек */
         @keyframes glow {
             0% { box-shadow: 0 0 5px rgba(102, 126, 234, 0.3); border-color: rgba(102, 126, 234, 0.3); }
             100% { box-shadow: 0 0 25px rgba(102, 126, 234, 0.6); border-color: rgba(102, 126, 234, 0.8); }
         }
 
-        /* Анимация появления строк таблицы */
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Анимация движения фона */
         @keyframes gradientBG {
             0% { background-position: 0% 0%; }
             50% { background-position: 100% 100%; }
@@ -61,7 +49,6 @@
             overflow-x: hidden;
         }
 
-        /* Анимированные частицы фона */
         .particles {
             position: fixed;
             top: 0;
@@ -94,7 +81,6 @@
             z-index: 1;
         }
 
-        /* Заголовок с неоновым эффектом */
         .header {
             text-align: center;
             margin-bottom: 40px;
@@ -120,7 +106,6 @@
             text-shadow: 0 0 5px rgba(102,126,234,0.5);
         }
 
-        /* Поиск с неоновой рамкой */
         .controls {
             background: rgba(255,255,255,0.08);
             backdrop-filter: blur(12px);
@@ -153,7 +138,6 @@
             transform: scale(1.01);
         }
 
-        /* Кнопки фильтров */
         .filter-buttons {
             display: flex;
             gap: 15px;
@@ -187,7 +171,6 @@
             box-shadow: 0 0 15px rgba(102, 126, 234, 0.5);
         }
 
-        /* Статистика — карточки с эффектом стекла */
         .stats {
             display: flex;
             gap: 20px;
@@ -230,7 +213,6 @@
             font-size: 0.9rem;
         }
 
-        /* Таблица с эффектом стекла */
         .table-container {
             background: rgba(255,255,255,0.08);
             backdrop-filter: blur(12px);
@@ -268,7 +250,6 @@
             font-size: 0.95rem;
         }
 
-        /* Анимация строк с задержкой */
         tr:nth-child(1) td { animation-delay: 0.05s; }
         tr:nth-child(2) td { animation-delay: 0.1s; }
         tr:nth-child(3) td { animation-delay: 0.15s; }
@@ -284,7 +265,6 @@
             background: rgba(102, 126, 234, 0.15);
         }
 
-        /* Ранги с неоновыми цветами */
         .rank-1 {
             background: linear-gradient(135deg, #ffd700, #ffb700);
             color: #1a1a2a;
@@ -351,7 +331,6 @@
     </style>
 </head>
 <body>
-    <!-- Анимированные частицы фона -->
     <div class="particles" id="particles"></div>
 
     <div class="container">
@@ -408,12 +387,13 @@
         // ============================================
         const SHEET_ID = '1S1RiKUiEcYbcax5nhWeA13_GNgh_6hstL1ebZhx6o1k';
         
-        // Список листов для загрузки
+        // ⚠️ ВАЖНО: Добавлен лист "Штрафы" для учёта штрафов в общем рейтинге
         const SHEETS = [
             { name: 'SpiderPoints', nameCol: 0, addCol: 1, subtractCol: 2 },
             { name: 'Кта', nameCol: 0, addCol: 1, subtractCol: 2 },
             { name: 'Ава пэпэ', nameCol: 0, addCol: 1, subtractCol: 2 },
-            { name: 'Прочее', nameCol: 0, addCol: 1, subtractCol: 2 }
+            { name: 'Прочее', nameCol: 0, addCol: 1, subtractCol: 2 },
+            { name: 'Штрафы', nameCol: 0, addCol: 1, subtractCol: 2 }   // ← ДОБАВЛЕН ЛИСТ ШТРАФОВ
         ];
         
         // Хранилище данных по листам
@@ -496,9 +476,11 @@
                     }
                 }
                 
+                console.log(`✅ Лист ${sheet.name}: загружено ${sheetData.length} записей`);
                 return sheetData;
                 
             } catch (error) {
+                console.warn(`⚠️ Ошибка загрузки листа ${sheet.name}:`, error.message);
                 return [];
             }
         }
@@ -524,6 +506,8 @@
                     allData.push(...sheetData);
                 }
                 
+                console.log(`📊 Всего загружено записей: ${allData.length}`);
+                
                 if (allData.length === 0) {
                     throw new Error('Нет данных. Проверьте, что листы опубликованы');
                 }
@@ -535,6 +519,7 @@
                 document.getElementById('updateTime').innerText = new Date().toLocaleString();
                 
             } catch (error) {
+                console.error('Ошибка:', error);
                 loading.style.display = 'none';
                 errorMsg.style.display = 'block';
                 errorMsg.innerHTML = `❌ Ошибка: ${error.message}<br><br>Проверьте публикацию таблиц`;
@@ -604,7 +589,8 @@
                 'SpiderPoints': '🕷️',
                 'Кта': '⚔️',
                 'Ава пэпэ': '👾',
-                'Прочее': '📋'
+                'Прочее': '📋',
+                'Штрафы': '⚠️'
             };
             return icons[sheetName] || '📊';
         }

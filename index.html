@@ -345,9 +345,11 @@
             </div>
             <div class="filter-buttons" id="filterButtons">
                 <button class="filter-btn active" data-sheet="all">📊 Все активности</button>
-                <button class="filter-btn" data-sheet="SpiderPoints">🕷️ SpiderPoints</button>
                 <button class="filter-btn" data-sheet="Кта">⚔️ Кта</button>
-                <button class="filter-btn" data-sheet="Ава пэпэ">👾 Ава пэпэ</button>
+                <button class="filter-btn" data-sheet="Пвп">🛡️ Пвп</button>
+                <button class="filter-btn" data-sheet="Ава">👾 Ава</button>
+                <button class="filter-btn" data-sheet="SpiderPoints">🕷️ SpiderPoints</button>
+                <button class="filter-btn" data-sheet="Глубины">🌊 Глубины</button>
                 <button class="filter-btn" data-sheet="Прочее">📋 Прочее</button>
             </div>
         </div>
@@ -389,9 +391,11 @@
         
         // ⚠️ ВАЖНО: Добавлен лист "Штрафы" для учёта штрафов в общем рейтинге
         const SHEETS = [
-            { name: 'SpiderPoints', nameCol: 0, addCol: 1, subtractCol: 2 },
             { name: 'Кта', nameCol: 0, addCol: 1, subtractCol: 2 },
-            { name: 'Ава пэпэ', nameCol: 0, addCol: 1, subtractCol: 2 },
+            { name: 'Пвп', nameCol: 0, addCol: 1, subtractCol: 2 },
+            { name: 'Ава', nameCol: 0, addCol: 1, subtractCol: 2 },
+            { name: 'SpiderPoints', nameCol: 0, addCol: 1, subtractCol: 2 },
+            { name: 'Глубины', nameCol: 0, addCol: 1, subtractCol: 2 },
             { name: 'Прочее', nameCol: 0, addCol: 1, subtractCol: 2 },
             { name: 'Штрафы', nameCol: 0, addCol: 1, subtractCol: 2 }   // ← ДОБАВЛЕН ЛИСТ ШТРАФОВ
         ];
@@ -588,7 +592,9 @@
             const icons = {
                 'SpiderPoints': '🕷️',
                 'Кта': '⚔️',
-                'Ава пэпэ': '👾',
+                'Пвп': '🛡️',
+                'Ава': '👾',
+                'Глубины': '🌊',
                 'Прочее': '📋',
                 'Штрафы': '⚠️'
             };

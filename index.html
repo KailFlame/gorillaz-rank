@@ -1342,6 +1342,189 @@
             .data-streak { display: none; }
         }
 
+
+        /* ================= ПАНЕЛЬ ИГРОКА — ИСТОРИЯ CTA ПО НЕДЕЛЯМ ================= */
+        .player-drawer-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.36);
+            backdrop-filter: blur(3px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .player-drawer-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .player-drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            z-index: 11;
+            width: min(430px, 94vw);
+            height: 100vh;
+            transform: translateX(105%);
+            transition: transform 0.32s ease;
+            padding: 22px;
+            overflow-y: auto;
+            background:
+                radial-gradient(circle at 20% 0%, rgba(57,255,136,0.12), transparent 32%),
+                radial-gradient(circle at 100% 20%, rgba(139,92,246,0.18), transparent 36%),
+                rgba(5, 7, 14, 0.94);
+            border-left: 1px solid rgba(57,255,136,0.48);
+            box-shadow:
+                -22px 0 70px rgba(0,0,0,0.55),
+                inset 1px 0 0 rgba(255,230,109,0.08),
+                0 0 44px rgba(57,255,136,0.10);
+            color: var(--cp-text);
+        }
+
+        .player-drawer.open {
+            transform: translateX(0);
+        }
+
+        .player-drawer-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(57,255,136,0.18);
+        }
+
+        .player-drawer-title small {
+            display: block;
+            color: var(--cp-muted);
+            font-size: 0.78rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .player-drawer-title h2 {
+            font-size: 1.8rem;
+            word-break: break-word;
+            line-height: 1.12;
+            background: linear-gradient(135deg, #f8fff9, var(--cp-green), var(--cp-cyan), var(--cp-purple));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 18px rgba(57,255,136,0.20);
+        }
+
+        .drawer-close {
+            min-width: 42px;
+            height: 42px;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            place-items: center;
+            border-radius: 14px;
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(57,255,136,0.26);
+        }
+
+        .drawer-section {
+            margin: 16px 0;
+            padding: 16px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.055);
+            border: 1px solid rgba(57,255,136,0.16);
+            box-shadow: inset 0 0 22px rgba(57,255,136,0.035);
+        }
+
+        .drawer-section h3 {
+            margin-bottom: 12px;
+            color: #dffff0;
+            font-size: 1rem;
+            letter-spacing: 0.03em;
+        }
+
+        .drawer-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .drawer-stat {
+            padding: 12px;
+            border-radius: 16px;
+            background: rgba(3, 5, 10, 0.56);
+            border: 1px solid rgba(57,255,136,0.12);
+        }
+
+        .drawer-stat .value {
+            display: block;
+            font-size: 1.45rem;
+            font-weight: 900;
+            color: var(--cp-green);
+            text-shadow: 0 0 12px rgba(57,255,136,0.24);
+        }
+
+        .drawer-stat .label {
+            display: block;
+            margin-top: 3px;
+            font-size: 0.78rem;
+            color: var(--cp-muted);
+        }
+
+        .week-row,
+        .record-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            color: #edf7ff;
+        }
+
+        .week-row:last-child,
+        .record-row:last-child { border-bottom: none; }
+
+        .week-label,
+        .record-label {
+            color: var(--cp-muted);
+            font-size: 0.9rem;
+        }
+
+        .week-value,
+        .record-value {
+            font-weight: 800;
+            color: var(--cp-green);
+            white-space: nowrap;
+        }
+
+        .player-row-clickable {
+            cursor: pointer;
+        }
+
+        .player-row-clickable:hover td {
+            background: rgba(57,255,136,0.10);
+        }
+
+        .drawer-empty {
+            color: var(--cp-muted);
+            font-size: 0.92rem;
+            line-height: 1.45;
+        }
+
+        @media (max-width: 768px) {
+            .player-drawer {
+                width: 100vw;
+                padding: 18px;
+            }
+            .drawer-stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -1370,15 +1553,16 @@
                 <input type="text" id="searchInput" placeholder="🔍 Поиск игрока...">
             </div>
             <div class="filter-buttons" id="filterButtons">
-                <!--
-                <button class="filter-btn active" data-sheet="all">📊 Все активности</button>
+                <button class="filter-btn active" data-sheet="Кта">⚔️ Кта</button>
+
+                <!-- Laikinai paslėpta. Grąžinimui ištrink komentarus ir pakeisk currentSheet į 'all', jeigu reikia bendro reitingo.
+                <button class="filter-btn" data-sheet="all">📊 Все активности</button>
                 <button class="filter-btn" data-sheet="Пвп">🛡️ Пвп</button>
                 <button class="filter-btn" data-sheet="Ава">👾 Ава</button>
                 <button class="filter-btn" data-sheet="SpiderPoints">🕷️ SpiderPoints</button>
                 <button class="filter-btn" data-sheet="Глубины">🌊 Глубины</button>
                 <button class="filter-btn" data-sheet="Прочее">📋 Прочее</button>
                 -->
-                <button class="filter-btn" data-sheet="Кта">⚔️ Кта</button>
             </div>
         </div>
 
@@ -1411,6 +1595,37 @@
         </div>
     </div>
 
+    <div class="player-drawer-overlay" id="playerDrawerOverlay" onclick="closePlayerPanel()"></div>
+    <aside class="player-drawer" id="playerDrawer" aria-hidden="true">
+        <div class="player-drawer-header">
+            <div class="player-drawer-title">
+                <small>ИНФОРМАЦИЯ ПО CTA</small>
+                <h2 id="drawerPlayerName">—</h2>
+            </div>
+            <button class="drawer-close" onclick="closePlayerPanel()" title="Закрыть">×</button>
+        </div>
+
+        <div class="drawer-section">
+            <h3>📊 Сводка по CTA</h3>
+            <div class="drawer-stats-grid">
+                <div class="drawer-stat"><span class="value" id="drawerTotalCta">—</span><span class="label">Всего CTA</span></div>
+                <div class="drawer-stat"><span class="value" id="drawerThisWeek">—</span><span class="label">Эта неделя</span></div>
+                <div class="drawer-stat"><span class="value" id="drawerPrevWeek">—</span><span class="label">Прошлая неделя</span></div>
+                <div class="drawer-stat"><span class="value" id="drawerAvgWeek">—</span><span class="label">Среднее в неделю</span></div>
+            </div>
+        </div>
+
+        <div class="drawer-section">
+            <h3>📅 История по неделям</h3>
+            <div id="drawerWeeks"></div>
+        </div>
+
+        <div class="drawer-section">
+            <h3>🧾 Последние записи</h3>
+            <div id="drawerRecords"></div>
+        </div>
+    </aside>
+
     <script>
         // ============================================
         // НАСТРОЙКИ (ЗАМЕНИ НА СВОЙ ID)
@@ -1419,13 +1634,16 @@
         
         // ⚠️ ВАЖНО: Добавлен лист "Штрафы" для учёта штрафов в общем рейтинге
         const SHEETS = [
-            { name: 'SpiderPoints', nameCol: 0, addCol: 1, subtractCol: 2 },
-            { name: 'Кта', nameCol: 0, addCol: 1, subtractCol: 2 },
-            { name: 'Пвп', nameCol: 0, addCol: 1, subtractCol: 2 },
-            { name: 'Ава', nameCol: 0, addCol: 1, subtractCol: 2 },
-            { name: 'Глубины', nameCol: 0, addCol: 1, subtractCol: 2 },
-            { name: 'Прочее', nameCol: 0, addCol: 1, subtractCol: 2 },
-            { name: 'Штрафы', nameCol: 0, addCol: 1, subtractCol: 2 }   // скрытый лист: участвует только в общем рейтинге
+            { name: 'Кта', nameCol: 0, addCol: 1, subtractCol: 2, dateCol: 4 }
+
+            /* Kiti lapai palikti rezervui ateičiai:
+            { name: 'SpiderPoints', nameCol: 0, addCol: 1, subtractCol: 2, dateCol: 4 },
+            { name: 'Пвп', nameCol: 0, addCol: 1, subtractCol: 2, dateCol: 4 },
+            { name: 'Ава', nameCol: 0, addCol: 1, subtractCol: 2, dateCol: 4 },
+            { name: 'Глубины', nameCol: 0, addCol: 1, subtractCol: 2, dateCol: 4 },
+            { name: 'Прочее', nameCol: 0, addCol: 1, subtractCol: 2, dateCol: 4 },
+            { name: 'Штрафы', nameCol: 0, addCol: 1, subtractCol: 2, dateCol: 4 }
+            */
         ];
         
         // Хранилище данных по листам
@@ -1451,6 +1669,69 @@
             }
         }
         
+        // ============================================
+        // ПОМОЩНИКИ ДЛЯ ДАТ CTA
+        // ============================================
+        function parseSheetDate(value) {
+            if (!value) return null;
+            const raw = String(value).replace(/^"|"$/g, '').trim();
+            if (!raw) return null;
+
+            // Google Visualization sometimes returns Date(2026,6,4), month is zero-based
+            let match = raw.match(/Date\((\d{4}),\s*(\d{1,2}),\s*(\d{1,2})\)/i);
+            if (match) return new Date(Number(match[1]), Number(match[2]), Number(match[3]));
+
+            // yyyy-mm-dd
+            match = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+            if (match) return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+
+            // dd.mm.yyyy / dd/mm/yyyy / dd-mm-yyyy
+            match = raw.match(/^(\d{1,2})[\.\/\-](\d{1,2})[\.\/\-](\d{4})$/);
+            if (match) return new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]));
+
+            const parsed = new Date(raw);
+            return isNaN(parsed.getTime()) ? null : parsed;
+        }
+
+        function startOfIsoWeek(date) {
+            const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            const day = d.getDay() || 7; // Monday = 1, Sunday = 7
+            d.setDate(d.getDate() - day + 1);
+            d.setHours(0, 0, 0, 0);
+            return d;
+        }
+
+        function addDays(date, days) {
+            const d = new Date(date);
+            d.setDate(d.getDate() + days);
+            return d;
+        }
+
+        function formatDate(date) {
+            if (!date) return 'Без даты';
+            return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        function formatShortDate(date) {
+            if (!date) return '—';
+            return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
+        }
+
+        function getWeekKey(date) {
+            const start = startOfIsoWeek(date);
+            const y = start.getFullYear();
+            const m = String(start.getMonth() + 1).padStart(2, '0');
+            const d = String(start.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function getWeekLabelFromKey(key) {
+            const [y, m, d] = key.split('-').map(Number);
+            const start = new Date(y, m - 1, d);
+            const end = addDays(start, 6);
+            return `${formatShortDate(start)}–${formatShortDate(end)}`;
+        }
+
         // ============================================
         // ЗАГРУЗКА ДАННЫХ С ЛИСТА
         // ============================================
@@ -1500,10 +1781,15 @@
                         if (!isNaN(add)) change += add;
                         if (!isNaN(subtract)) change -= subtract;
                         
+                        const dateRaw = sheet.dateCol !== undefined ? cells[sheet.dateCol] : '';
+                        const parsedDate = parseSheetDate(dateRaw);
+
                         sheetData.push({
                             name: name,
                             score: change,
-                            sheet: sheet.name
+                            sheet: sheet.name,
+                            date: parsedDate,
+                            dateRaw: dateRaw || ''
                         });
                     }
                 }
@@ -1593,6 +1879,9 @@
             for (let i = 0; i < filtered.length; i++) {
                 const p = filtered[i];
                 const row = tbody.insertRow();
+                row.classList.add('player-row-clickable');
+                row.addEventListener('click', () => openPlayerPanel(p.name));
+                row.title = 'Открыть CTA историю игрока';
 
                 let rankClass = '';
                 let rowClass = '';
@@ -1629,7 +1918,82 @@
                 }
             }
         }
-        
+
+        function openPlayerPanel(playerName) {
+            const records = allData
+                .filter(item => item.sheet === 'Кта' && item.name === playerName)
+                .map(item => ({ ...item }))
+                .sort((a, b) => {
+                    const at = a.date ? a.date.getTime() : 0;
+                    const bt = b.date ? b.date.getTime() : 0;
+                    return bt - at;
+                });
+
+            const total = records.reduce((sum, item) => sum + item.score, 0);
+            const today = new Date();
+            const thisWeekKey = getWeekKey(today);
+            const prevWeekKey = getWeekKey(addDays(startOfIsoWeek(today), -1));
+            const datedRecords = records.filter(item => item.date);
+
+            const weekMap = new Map();
+            for (const item of datedRecords) {
+                const key = getWeekKey(item.date);
+                if (!weekMap.has(key)) weekMap.set(key, { key, score: 0, count: 0 });
+                const week = weekMap.get(key);
+                week.score += item.score;
+                week.count += 1;
+            }
+
+            const weeks = Array.from(weekMap.values()).sort((a, b) => b.key.localeCompare(a.key));
+            const thisWeek = weekMap.get(thisWeekKey)?.score || 0;
+            const prevWeek = weekMap.get(prevWeekKey)?.score || 0;
+            const avg = weeks.length ? (total / weeks.length).toFixed(1) : '0.0';
+
+            document.getElementById('drawerPlayerName').innerText = playerName;
+            document.getElementById('drawerTotalCta').innerText = total;
+            document.getElementById('drawerThisWeek').innerText = thisWeek;
+            document.getElementById('drawerPrevWeek').innerText = prevWeek;
+            document.getElementById('drawerAvgWeek').innerText = avg;
+
+            const weeksContainer = document.getElementById('drawerWeeks');
+            if (weeks.length === 0) {
+                weeksContainer.innerHTML = '<div class="drawer-empty">Нет записей с датой. Проверь E колонку в листе Кта.</div>';
+            } else {
+                weeksContainer.innerHTML = weeks.map(week => `
+                    <div class="week-row">
+                        <span class="week-label">${getWeekLabelFromKey(week.key)}</span>
+                        <span class="week-value">${week.score} CTA</span>
+                    </div>
+                `).join('');
+            }
+
+            const recordsContainer = document.getElementById('drawerRecords');
+            if (records.length === 0) {
+                recordsContainer.innerHTML = '<div class="drawer-empty">Записей по игроку нет.</div>';
+            } else {
+                recordsContainer.innerHTML = records.slice(0, 12).map(item => `
+                    <div class="record-row">
+                        <span class="record-label">${formatDate(item.date)}</span>
+                        <span class="record-value">${item.score > 0 ? '+' : ''}${item.score}</span>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('playerDrawerOverlay').classList.add('open');
+            document.getElementById('playerDrawer').classList.add('open');
+            document.getElementById('playerDrawer').setAttribute('aria-hidden', 'false');
+        }
+
+        function closePlayerPanel() {
+            document.getElementById('playerDrawerOverlay').classList.remove('open');
+            document.getElementById('playerDrawer').classList.remove('open');
+            document.getElementById('playerDrawer').setAttribute('aria-hidden', 'true');
+        }
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closePlayerPanel();
+        });
+
         function getSheetIcon(sheetName) {
             const icons = {
                 'SpiderPoints': '🕷️',

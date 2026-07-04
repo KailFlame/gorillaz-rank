@@ -1929,11 +1929,14 @@
                     return bt - at;
                 });
 
-            const total = records.reduce((sum, item) => sum + item.score, 0);
+            // 0 записи от синхронизации не считаем как посещение CTA.
+            // Они остаются в Google Sheets, но в панели не засоряют историю.
+            const ctaRecords = records.filter(item => item.score !== 0);
+            const total = ctaRecords.reduce((sum, item) => sum + item.score, 0);
             const today = new Date();
             const thisWeekKey = getWeekKey(today);
             const prevWeekKey = getWeekKey(addDays(startOfIsoWeek(today), -1));
-            const datedRecords = records.filter(item => item.date);
+            const datedRecords = ctaRecords.filter(item => item.date);
 
             const weekMap = new Map();
             for (const item of datedRecords) {
@@ -1944,7 +1947,10 @@
                 week.count += 1;
             }
 
-            const weeks = Array.from(weekMap.values()).sort((a, b) => b.key.localeCompare(a.key));
+            const weeks = Array.from(weekMap.values())
+                .filter(week => week.score !== 0)
+                .sort((a, b) => b.key.localeCompare(a.key));
+
             const thisWeek = weekMap.get(thisWeekKey)?.score || 0;
             const prevWeek = weekMap.get(prevWeekKey)?.score || 0;
             const avg = weeks.length ? (total / weeks.length).toFixed(1) : '0.0';
@@ -1957,7 +1963,7 @@
 
             const weeksContainer = document.getElementById('drawerWeeks');
             if (weeks.length === 0) {
-                weeksContainer.innerHTML = '<div class="drawer-empty">Нет записей с датой. Проверь E колонку в листе Кта.</div>';
+                weeksContainer.innerHTML = '<div class="drawer-empty">Нет CTA записей с датой. Проверь E колонку в листе Кта.</div>';
             } else {
                 weeksContainer.innerHTML = weeks.map(week => `
                     <div class="week-row">
@@ -1967,14 +1973,36 @@
                 `).join('');
             }
 
+            // Последние записи группируем по датам, чтобы несколько CTA за один день
+            // отображались одной строкой: 04.07.2026  +3 CTA.
+            const dayMap = new Map();
+            for (const item of datedRecords) {
+                const y = item.date.getFullYear();
+                const m = String(item.date.getMonth() + 1).padStart(2, '0');
+                const d = String(item.date.getDate()).padStart(2, '0');
+                const key = `${y}-${m}-${d}`;
+
+                if (!dayMap.has(key)) {
+                    dayMap.set(key, { key, date: item.date, score: 0, count: 0 });
+                }
+
+                const day = dayMap.get(key);
+                day.score += item.score;
+                day.count += 1;
+            }
+
+            const dayRecords = Array.from(dayMap.values())
+                .filter(day => day.score !== 0)
+                .sort((a, b) => b.key.localeCompare(a.key));
+
             const recordsContainer = document.getElementById('drawerRecords');
-            if (records.length === 0) {
-                recordsContainer.innerHTML = '<div class="drawer-empty">Записей по игроку нет.</div>';
+            if (dayRecords.length === 0) {
+                recordsContainer.innerHTML = '<div class="drawer-empty">CTA записей пока нет.</div>';
             } else {
-                recordsContainer.innerHTML = records.slice(0, 12).map(item => `
+                recordsContainer.innerHTML = dayRecords.slice(0, 12).map(day => `
                     <div class="record-row">
-                        <span class="record-label">${formatDate(item.date)}</span>
-                        <span class="record-value">${item.score > 0 ? '+' : ''}${item.score}</span>
+                        <span class="record-label">${formatDate(day.date)}</span>
+                        <span class="record-value">${day.score > 0 ? '+' : ''}${day.score} CTA</span>
                     </div>
                 `).join('');
             }
